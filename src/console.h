@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "adc.h"
 #include "mpu.h"
 
 // Function pointer for individual command handler
@@ -22,7 +23,8 @@ typedef struct console_command_t
 // Table of all implemeted commands
 const console_command_t command_table[] =
 {
-    {"mpu", mpu_console}
+    { "mpu", mpu_console },
+    { "adc", adc_console }
 };
 
 /*

@@ -8,6 +8,7 @@
 #include <Arduino.h>
 #include <arduino-timer.h>
 
+#include "adc.h"
 #include "console.h"
 #include "mpu.h"
 
@@ -26,6 +27,7 @@ void setup()
 {
     pinMode(LED_PIN, OUTPUT);
 
+    adc_init();
     console_init();
     mpu_init();
 
