@@ -11,6 +11,7 @@
 #include <string.h>
 
 #define BUF_LEN     128
+#define MAX_ARGS    24
 #define BAUD_RATE   115200
 
 char  console_buffer[BUF_LEN];
@@ -72,17 +73,42 @@ bool console_tick(void* unused)
 
 void _handleCommand(char* command)
 {
-    char* cursor = command;
-    bool  found  = false;
+    // Remove leading whitespace
+    while (isspace(*command)) ++command;
+
+    char*   argv[MAX_ARGS];
+    char*   cursor = command;
+    uint8_t argc   = 1;
+    bool was_space = false;
+
+    // First arg is always the command
+    argv[0] = cursor;
+
+    // Walk through the string counting and collecting args
+    while (*cursor != '\0')
+    {
+        if (*cursor == ' ')
+        {
+            *cursor = '\0';
+            was_space = true;
+        }
+        else if (was_space)
+        {
+            was_space = false;
+            argv[argc] = cursor;
+            argc++;
+        }
+
+        cursor++;
+    }    
     
+    // Lookup the command in the command table and run the handler if found
+    bool  found  = false;
     for (uint8_t i = 0; i < (sizeof(command_table) / sizeof(console_command_t)); i++)
     {
-        uint8_t len = strlen(command_table[i].command);
-        if (!strncmp(command, command_table[i].command, len) &&
-            (*(command + len) == ' ' || *(command + len) == '\0'))
+        if (!strcmp(argv[0], command_table[i].command))
         {
-            cursor += (*(command + len) == ' ') ? len + 1 : len;
-            if (!command_table[i].handler(cursor))
+            if (!command_table[i].handler(argc, argv))
                 Serial.println("Command error!");
 
             found = true;
@@ -92,6 +118,6 @@ void _handleCommand(char* command)
     
     if (!found)
     {
-        Serial.printf("Command \"%s\" not found.\r\n", command);
+        Serial.printf("Command \"%s\" not found.\r\n", argv[0]);
     }
 }

@@ -82,9 +82,21 @@ bool mpu_sample(float accel[3], float gyro[3], float* temp)
     return connected;
 }
 
-bool mpu_console(char* args)
+bool mpu_console(uint8_t argc, char* argv[])
 {
-    if (!strcmp("get", args))
+    if (!strcmp("init", argv[1]))
+    {
+        if (!mpu_init())
+        {
+            Serial.println("Error initializing sensor!");
+            return false;
+        }
+
+        Serial.println("Sensor initialized!");
+        return true;
+    }
+
+    if (!strcmp("sample", argv[1]))
     {
         float a[3], g[3], t;
         if (!mpu_sample(a, g, &t))
@@ -97,18 +109,6 @@ bool mpu_console(char* args)
         Serial.printf("G: [%6.2f, %6.2f, %6.2f], ", g[0], g[1], g[2]);
         Serial.printf("T: %5.2f\r\n", t);
 
-        return true;
-    }
-
-    if (!strcmp("init", args))
-    {
-        if (!mpu_init())
-        {
-            Serial.println("Error initializing sensor!");
-            return false;
-        }
-
-        Serial.println("Sensor initialized!");
         return true;
     }
 

@@ -37,7 +37,8 @@ bool mpu_sample(float accel[3], float gyro[3], float temp);
 
 /*
  * Name:    mpu_console
- *  args:   command arguments
+ *  argc:   number of arguments
+ *  argv:   list of arguments
  * Desc:    MPU console command handler
  */
-bool mpu_console(char* args);
+bool mpu_console(uint8_t argc, char* argv[]);

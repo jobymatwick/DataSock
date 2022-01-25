@@ -10,7 +10,7 @@
 #include "mpu.h"
 
 // Function pointer for individual command handler
-typedef bool (*console_handler_t)(char* args);
+typedef bool (*console_handler_t)(uint8_t argc, char* argv[]);
 
 // Command structy containg command string and handler
 typedef struct console_command_t
