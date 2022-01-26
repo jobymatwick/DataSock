@@ -20,7 +20,7 @@ char* console_cursor = console_buffer;
 /*
  * Name:     _handleCommand
  *  command: command to run handler for
- * Desc:     Lookup and run the handler associated with a provided command
+ * Desc:     Parse a command and its arguments and run the asso
  */
 void _handleCommand(char* command);
 
@@ -32,9 +32,7 @@ void console_init()
 
 bool console_tick(void* unused)
 {
-    uint8_t bytes_to_read = Serial.available();
-
-    for (uint8_t i = 0; i < bytes_to_read; i++)
+    for (uint8_t i = 0; i < Serial.available(); i++)
     {
         char byte = Serial.read();
 
@@ -50,22 +48,29 @@ bool console_tick(void* unused)
             continue;
         }
 
-        // Echo the received character and save to the buffer
-        Serial.write(byte);
-        *console_cursor++ = byte;
-    }
+        // Ignore \n character. Some terminals send \r\n newlines, some just \r
+        if (byte == '\n') continue;
 
-    // Newline == end of command
-    if (*(console_cursor - 2) == '\r' && *(console_cursor - 1) == '\n')
-    {
-        // Null-terminate end of command string
-        *(console_cursor - 2) = '\0';
+        if (byte == '\r')
+        {
+            // Null-terminate end of command string & send newline
+            *console_cursor = '\0';
+            Serial.print("\r\n");
 
-        if (console_cursor - console_buffer > 2)
-            _handleCommand(console_buffer);
+            // Handle the command if present
+            if (console_cursor - console_buffer)
+                _handleCommand(console_buffer);
 
-        console_cursor = console_buffer;
-        Serial.print("> ");
+            // Reset the cursor and print the new prompt
+            console_cursor = console_buffer;
+            Serial.print("> ");
+        }
+        else
+        {
+            // Echo the received character and save to the buffer
+            Serial.write(byte);
+            *console_cursor++ = byte;
+        }
     }
     
     return true;
