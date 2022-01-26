@@ -25,6 +25,13 @@ void adc_init(void);
 void adc_sample(uint16_t* channels, uint8_t count);
 
 /*
+ * Name:      adc_readTask
+ *  unused:   unused argument
+ * Desc:      Used to periodically sample the analog inputs
+ */
+bool adc_readTask(void* unused);
+
+/*
  * Name:    adc_console
  *  argc:   number of arguments
  *  argv:   list of arguments

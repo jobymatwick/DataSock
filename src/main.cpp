@@ -34,6 +34,7 @@ void setup()
     // Setup recurring tasks
     timer.every(100, toggleLed);
     timer.every(50, console_tick);
+    timer.every(250, adc_readTask);
 }
 
 void loop()
