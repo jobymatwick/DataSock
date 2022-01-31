@@ -11,6 +11,7 @@
 #include "adc.h"
 #include "console.h"
 #include "mpu.h"
+#include "clock.h"
 
 #define TIMER_TASKS 5
 #define LED_PIN 13
@@ -30,6 +31,7 @@ void setup()
     adc_init();
     console_init();
     mpu_init();
+    clock_init();
 
     // Setup recurring tasks
     timer.every(100, toggleLed);
