@@ -10,6 +10,7 @@
 #include "adc.h"
 #include "mpu.h"
 #include "clock.h"
+#include "storage.h"
 
 // Function pointer for individual command handler
 typedef bool (*console_handler_t)(uint8_t argc, char* argv[]);
@@ -26,7 +27,8 @@ const console_command_t command_table[] =
 {
     { "mpu", mpu_console },
     { "adc", adc_console },
-    { "clock", clock_console }
+    { "clock", clock_console },
+    { "storage", storage_console }
 };
 
 /*
