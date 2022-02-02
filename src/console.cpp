@@ -13,6 +13,8 @@
 #define BUF_LEN     128
 #define MAX_ARGS    24
 #define BAUD_RATE   115200
+#define ASCII_BOT   0x20
+#define ASCII_TOP   0x7E
 
 char  console_buffer[BUF_LEN];
 char* console_cursor = console_buffer;
@@ -36,8 +38,8 @@ bool console_tick(void* unused)
     {
         char byte = Serial.read();
 
-        // Remove previous char and move cursor back when BACKSPACE is pressed
-        if (byte == 0x08)
+        // Remove previous char and move cursor back on BACKSPACE or DELETE
+        if (byte == 0x08 || byte == 0x7F)
         {
             if (console_cursor - console_buffer)
             {
@@ -65,9 +67,10 @@ bool console_tick(void* unused)
             console_cursor = console_buffer;
             Serial.print("> ");
         }
-        else
+        
+        // Echo the received printable character and save to the buffer
+        if (byte >= ASCII_BOT && byte <= ASCII_TOP)
         {
-            // Echo the received character and save to the buffer
             Serial.write(byte);
             *console_cursor++ = byte;
         }
