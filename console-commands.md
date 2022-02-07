@@ -10,6 +10,7 @@
     - [`get` - Get Local Time](#get---get-local-time)
     - [`set` - Set Local Time/Date](#set---set-local-timedate)
     - [`tz` - Set Timezone](#tz---set-timezone)
+    - [`status` - Get Status](#status---get-status)
 
 ## `mpu` - MPU 6050
 Commands to interface with the MPU 6050 6-axis IMU over I2C.
@@ -73,4 +74,11 @@ Set the timezone as an offset from UTC in hours
 ```
 > clock tz -8
 Timezone: -8
+```
+
+### `status` - Get Status
+Check if the clock has been set since the last time the RTC lost power. 
+```
+> clock status
+Clock has been set.
 ```

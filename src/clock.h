@@ -32,6 +32,14 @@ uint32_t clock_getLocalNowSeconds();
 char* clock_getLocalNowString();
 
 /*
+ * Name:    clock_isSet
+ *  return: True if the clock has been set
+ * Desc:    Checks the RTC NVRAM set flag to see of the time has been set since
+ *            the last battery loss.
+ */
+bool clock_isSet();
+
+/*
  * Name:    clock_console
  *  argc:   number of arguments
  *  argv:   list of arguments

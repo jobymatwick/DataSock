@@ -15,6 +15,8 @@
 #define SECONDS_PER_HOUR 3600
 #define TIME_STRING_BUF_LEN 32
 
+#define RTC_SET_FLAG (*(volatile uint8_t*) 0x4003E000)
+
 /*
  * Name:    _getUtcTime
  *  return: real UTC time in seconds from the Teensy's RTC
@@ -81,6 +83,11 @@ char* clock_getLocalNowString()
     return _time_string_buf;
 }
 
+bool clock_isSet()
+{
+    return RTC_SET_FLAG;
+}
+
 bool clock_console(uint8_t argc, char* argv[])
 {
     if (!strcmp("get", argv[1]))
@@ -112,6 +119,7 @@ bool clock_console(uint8_t argc, char* argv[])
 
         Teensy3Clock.set(time);
         setTime(time);
+        RTC_SET_FLAG = 1;
 
         Serial.printf("RTC: %d UTC\r\n", time);
         Serial.printf("Localtime: %s\r\n", clock_getLocalNowString());
@@ -127,6 +135,13 @@ bool clock_console(uint8_t argc, char* argv[])
         }
 
         Serial.printf("Timezone: %s%d\r\n", (_time_zone >= 0) ? "+" : "", _time_zone);
+
+        return true;
+    }
+
+    if (!strcmp("status", argv[1]))
+    {
+        Serial.printf("Clock has%sbeen set.\r\n", clock_isSet() ? " " : " not ");
 
         return true;
     }
