@@ -11,6 +11,8 @@
     - [`set` - Set Local Time/Date](#set---set-local-timedate)
     - [`tz` - Set Timezone](#tz---set-timezone)
     - [`status` - Get Status](#status---get-status)
+  - [`storage` - SD Card Storage](#storage---sd-card-storage)
+    - [`format` - Wipe the SD card](#format---wipe-the-sd-card)
 
 ## `mpu` - MPU 6050
 Commands to interface with the MPU 6050 6-axis IMU over I2C.
@@ -81,4 +83,14 @@ Check if the clock has been set since the last time the RTC lost power.
 ```
 > clock status
 Clock has been set.
+```
+
+## `storage` - SD Card Storage
+
+
+### `format` - Wipe the SD card
+Completely erase the SD card and then format as exFAT.
+```
+> storage format
+ADC initialized!
 ```

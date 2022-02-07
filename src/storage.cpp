@@ -13,17 +13,18 @@
 
 #define ERASE_SIZE 262144L
 
-SdFs sd;
+SdFs _sd;
 
 bool storage_format()
 {
-    sd.end(); // End SD usage if started
+    _sd.end(); // End SD usage if started
 
     SdCardFactory factory;
     SdCard* card = factory.newCard(SdioConfig(FIFO_SDIO));
-    if (!card || card->errorCode())
+    uint8_t code = card->errorCode();
+    if (!card || code)
     {
-        Serial.println("Failed to init SD card for format");
+        Serial.printf("Failed to init SD card for format (%d)\r\n", code);
         return false;
     }
 
@@ -35,12 +36,12 @@ bool storage_format()
     }
 
     Serial.printf("Found %.2f GB SD card\r\n", (sectors * 512E-8) / 10.0);
-    Serial.print("Starting erase...\r\n");
+    Serial.print("Starting erase... ....");
 
     // Erase all SD sectors
     uint32_t first_block = 0;
     uint32_t last_block;
-    uint8_t n = 0;
+    uint16_t n = 0;
     while (first_block < sectors)
     {
         last_block = (first_block + ERASE_SIZE > sectors)
@@ -52,20 +53,21 @@ bool storage_format()
             return false;
         }
 
-        Serial.print(".");
-        if ((n++) % 80 == 79) Serial.print("\r\n");
+        Serial.printf("\b\b\b\b%3d%%", (++n * 100) / (sectors / ERASE_SIZE));
 
         first_block += ERASE_SIZE;
     }
+
+    Serial.print(" complete.\r\n");
 
     // Verify erase
     uint8_t buf[512];
     if (!card->readSector(0, buf))
     {
-        Serial.println("\r\nFailed to read first block");
+        Serial.printf("Failed to read first block (%d)\r\n", card->errorCode());
         return false;
     }
-    Serial.printf("\r\nAll blocks erased to 0x%02x\r\n", buf[0]);
+    Serial.printf("All blocks erased to 0x%02x\r\n", buf[0]);
 
     // Format as exFAT
     ExFatFormatter exFatFormatter;
