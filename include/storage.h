@@ -10,7 +10,23 @@
 
 #include <Arduino.h>
 
+#define CONFIG_STRING_LEN 32
+typedef struct option_t
+{
+    const char* key;
+    const char* default_val;
+    float num_value;
+    char str_value[CONFIG_STRING_LEN];
+} config_option_t;
 
+extern config_option_t config_settings[];
+
+/*
+ * Name:    storge_init
+ *  return: true if successfully communicating with SD card
+ * Desc:    Attempt to communicate with SD card and begin the connection
+ */
+bool storage_init();
 
 /*
  * Name:    storage_format
@@ -19,6 +35,13 @@
  *            library example "SdFormatter.ino"
  */
 bool storage_format();
+
+/*
+ * Name:    storage_configCreate
+ *  return: true if successfully created config file with default values
+ * Desc:    Create or replace the "config.txt" file on the SD card with defaults
+ */
+bool storage_configCreate();
 
 /*
  * Name:    storage_console

@@ -28,7 +28,7 @@ const console_command_t command_table[] =
     { "mpu", mpu_console },
     { "adc", adc_console },
     { "clock", clock_console },
-    { "storage", storage_console }
+    { "sd", storage_console }
 };
 
 /*
