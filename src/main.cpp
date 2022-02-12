@@ -6,50 +6,50 @@
  */
 
 #include <Arduino.h>
-#include <arduino-timer.h>
 
 #include "adc.h"
 #include "console.h"
 #include "mpu.h"
 #include "clock.h"
+#include "storage.h"
 
-#define TIMER_TASKS 5
-#define LED_PIN 13
+#define LED_PERIOD 100
+#define CONSOLE_PERIOD 50
+// TODO: Use the value in the config file
+#define ADC_PERIOD 250
 
-Timer<TIMER_TASKS> timer;
-
-/*
- * Name:    toggleLed
- * Desc:    toggle the LED on LED_PIN
- */
-bool toggleLed(void *unused);
+uint32_t next_led = LED_PERIOD;
+uint32_t next_console = CONSOLE_PERIOD;
+uint32_t next_adc = ADC_PERIOD;
 
 void setup()
 {
-    pinMode(LED_PIN, OUTPUT);
+    pinMode(LED_BUILTIN, OUTPUT);
 
     adc_init();
     console_init();
     mpu_init();
     clock_init();
-
-    // Setup recurring tasks
-    timer.every(100, toggleLed);
-    timer.every(50, console_tick);
-    timer.every(250, adc_readTask);
+    storage_init();
 }
 
 void loop()
 {
-    // Repeatedly tick the timer
-    timer.tick();
-}
+    if (millis() >= next_led)
+    {
+        next_led += LED_PERIOD;
+        digitalToggle(LED_BUILTIN);
+    }
 
-bool toggleLed(void *unused)
-{
-    static uint8_t last_state = 0;
-    digitalWrite(LED_PIN, !last_state);
-    last_state = !last_state;
-    
-    return true;
+    if (millis() >= next_console)
+    {
+        next_console += CONSOLE_PERIOD;
+        console_tick(NULL);
+    }
+
+    if (millis() >= next_adc)
+    {
+        next_adc += ADC_PERIOD;
+        adc_readTask(NULL);
+    }
 }
