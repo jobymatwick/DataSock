@@ -16,6 +16,10 @@
 #define ASCII_BOT   0x20
 #define ASCII_TOP   0x7E
 
+#define CPU_RESTART_ADDR (uint32_t *)0xE000ED0C
+#define CPU_RESTART_VAL 0x5FA0004
+#define CPU_RESTART (*CPU_RESTART_ADDR = CPU_RESTART_VAL)
+
 char  console_buffer[BUF_LEN];
 char* console_cursor = console_buffer;
 
@@ -108,7 +112,9 @@ void _handleCommand(char* command)
         }
 
         cursor++;
-    }    
+    }
+
+    if (!strcmp(argv[0], "reset")) CPU_RESTART;
     
     // Lookup the command in the command table and run the handler if found
     bool  found  = false;
