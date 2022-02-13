@@ -11,6 +11,7 @@
 
 #include <TimeLib.h>
 #include <time.h>
+#include <common/FsDateTime.h>
 
 #define SECONDS_PER_HOUR 3600
 #define TIME_STRING_BUF_LEN 32
@@ -86,6 +87,14 @@ char* clock_getLocalNowString()
 bool clock_isSet()
 {
     return RTC_SET_FLAG;
+}
+
+void clock_fsStampCallback(uint16_t* date, uint16_t* time)
+{
+    time_t local_time = clock_getLocalNowSeconds();
+
+    *date = FS_DATE(year(local_time), month(local_time), day(local_time));
+    *time = FS_TIME(hour(local_time), minute(local_time), second(local_time));
 }
 
 bool clock_console(uint8_t argc, char* argv[])

@@ -40,6 +40,14 @@ char* clock_getLocalNowString();
 bool clock_isSet();
 
 /*
+ * Name:    clock_fsStampCallback
+ *  date    pointer to date variable to populate
+ *  time:   pointer to time variable to populate
+ * Desc:    Callback function to set timestamps in files
+ */
+void clock_fsStampCallback(uint16_t* date, uint16_t* time);
+
+/*
  * Name:    clock_console
  *  argc:   number of arguments
  *  argv:   list of arguments

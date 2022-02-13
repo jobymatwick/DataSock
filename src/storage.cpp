@@ -11,6 +11,8 @@
 #include <SdFat.h>
 #include <sdios.h>
 
+#include "clock.h"
+
 #define ERASE_SIZE 262144L
 #define CONFIG_NAME "config.txt"
 
@@ -28,6 +30,8 @@ void _sdError();
 
 bool storage_init()
 {
+    FsDateTime::setCallback(clock_fsStampCallback);
+
     if (!_sd.begin(SdioConfig(FIFO_SDIO)))
     {
         Serial.println("Failed to open SD card.");
