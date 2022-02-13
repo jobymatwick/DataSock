@@ -15,6 +15,7 @@
 
 #define ERASE_SIZE 262144L
 #define CONFIG_NAME "config.txt"
+#define READ_BUF_SIZE 256
 
 config_option_t config_settings[] = 
 {
@@ -138,7 +139,11 @@ bool storage_configCreate()
     }
 
     FsFile conf_file;
-    conf_file.open(CONFIG_NAME, O_RDWR | O_CREAT | O_EXCL);
+    if (!conf_file.open(CONFIG_NAME, O_RDWR | O_CREAT | O_EXCL))
+    {
+        _sdError();
+        return false;
+    }
 
     for (uint16_t i = 0; i < sizeof(config_settings) / sizeof(config_option_t); i++)
     {
@@ -152,6 +157,79 @@ bool storage_configCreate()
 
     Serial.println("Default \"" CONFIG_NAME "\" created.");
     return true;
+}
+
+bool storage_configLoad()
+{
+    if (!_sd_open)
+    {
+        Serial.println("SD not open!");
+        return false;
+    }
+
+    FsFile conf_file;
+    if (!conf_file.open(CONFIG_NAME, O_RDONLY))
+    {
+        _sdError();
+        return false;
+    }
+
+    char buf[READ_BUF_SIZE];
+    char *key_curs, *val_curs, *end_curs;
+    uint8_t match_cnt = 0;
+
+    while (conf_file.available() > 3)
+    {
+        uint8_t cnt = (conf_file.available() > READ_BUF_SIZE - 1) ? READ_BUF_SIZE - 1 : conf_file.available();
+        uint8_t read = conf_file.readBytesUntil('\n', buf, cnt);
+
+        // Walk-off any leading whitespace
+        key_curs = buf;
+        while (isspace(*key_curs) && key_curs - buf < read) key_curs++;
+
+        // Ignore comment lines (start with '#')
+        if (*key_curs == '#') continue;
+
+        // Walk to first character of value string and replace '=' with '\0'
+        val_curs = key_curs;
+        while (*val_curs != '=' && val_curs - buf < read) val_curs++;
+        *(val_curs++) = '\0';
+
+        // Walk to end of value and set null terminator
+        end_curs = val_curs;
+        while (end_curs - buf < read + 1)
+        {
+            if (*end_curs == '\r' || *end_curs == '\n') 
+            {
+                *end_curs = '\0';
+                break;
+            }
+            end_curs++;
+        }
+
+        // Abort if key length is 0
+        if (!strlen(key_curs)) continue;
+
+        bool found = false;
+        for (uint8_t i = 0; i < sizeof(config_settings) / sizeof(config_option_t); i++)
+        {
+            if (!strncmp(key_curs, config_settings[i].key, strlen(config_settings[i].key)))
+            {
+                memcpy(config_settings[i].str_value, val_curs, end_curs - val_curs);
+                match_cnt++;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+        {
+            Serial.printf("No match for key \"%s\" (%s)\r\n", key_curs, val_curs);
+        }
+    }
+
+    Serial.printf("Loaded %d settings.\r\n", match_cnt);
+    return match_cnt;
 }
 
 bool storage_console(uint8_t argc, char* argv[])
@@ -229,6 +307,11 @@ bool storage_console(uint8_t argc, char* argv[])
             return false;
 
         return storage_configCreate();
+    }
+
+    if (!strcmp("load", argv[1]))
+    {
+        return storage_configLoad();
     }
 
     return false;

@@ -17,6 +17,7 @@
     - [`ls` - List files](#ls---list-files)
     - [`cat` - Print File Contents](#cat---print-file-contents)
     - [`default` - Create Default Config](#default---create-default-config)
+    - [`load` - Load Settings file](#load---load-settings-file)
     - [`format` - Wipe the SD card](#format---wipe-the-sd-card)
 
 ## `mpu` - MPU 6050
@@ -131,6 +132,13 @@ Creates a new or replaces any existing config file with compiled defaults.
 > sd default
 Removing original config file
 Default "config.txt" created.
+```
+
+### `load` - Load Settings file
+Load and parse the settings file from the SD card.
+```
+> sd load
+Loaded 3 settings.
 ```
 
 ### `format` - Wipe the SD card

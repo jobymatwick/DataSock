@@ -15,7 +15,6 @@ typedef struct option_t
 {
     const char* key;
     const char* default_val;
-    float num_value;
     char str_value[CONFIG_STRING_LEN];
 } config_option_t;
 
@@ -42,6 +41,13 @@ bool storage_format();
  * Desc:    Create or replace the "config.txt" file on the SD card with defaults
  */
 bool storage_configCreate();
+
+/*
+ * Name:    storage_configLoad
+ *  return: true if config file successfully loaded
+ * Desc:    Read the config file from the SD.
+ */
+bool storage_configLoad();
 
 /*
  * Name:    storage_console
