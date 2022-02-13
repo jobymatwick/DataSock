@@ -8,78 +8,101 @@
 #include "mpu.h"
 
 #include <string.h>
-#include <Adafruit_Sensor.h>
 #include <Wire.h>
+#include <I2Cdev.h>
+#include <MPU6050.h>
 
-#define ACCEL_RANGE MPU6050_RANGE_8_G
-#define GYRO_RANGE  MPU6050_RANGE_500_DEG
-#define FILTER_BW   MPU6050_BAND_21_HZ
+#define G_M_PER_S 9.8066
+#define DEG_PER_RAD 0.0174533
 
-Adafruit_MPU6050 mpu;
-bool             connected = false;
+static const uint16_t accel_ranges[] = { 2, 4, 8, 16 }; 
+static const uint16_t gyro_ranges[] = { 250, 500, 1000, 2000 }; 
+static const uint16_t filter_ranges[] = { 260, 184, 194, 44, 21, 10, 5 }; 
+
+MPU6050 _mpu;
+bool _connected = false;
+mpu_accel_range_t _accel_setting = ACCEL_4_G;
+mpu_gyro_range_t _gyro_setting = GYRO_500_DEG_PER_S;
+mpu_filter_range_t _filter_setting = FILTER_21_HZ;
 
 bool mpu_init()
 {
-    // Reset if already connected
-    if (connected)
+    Wire.begin();
+
+    if (_connected) _mpu.reset();
+    _mpu.initialize();
+
+    if (!_mpu.testConnection())
     {
-        mpu.reset();
+        Serial.println("MPU connection failed.");
+        _connected = false;
+        return _connected;
     }
 
-    if (!mpu.begin())
-    {
-        connected = false;
-        return connected;
-    }
+    _connected = true;
 
-    connected = true;
-    connected = mpu_configure(ACCEL_RANGE, GYRO_RANGE, FILTER_BW);
+    _mpu.setXAccelOffset(mpu_cal_configs[MPU_CAL_CONFIG].ax);
+    _mpu.setYAccelOffset(mpu_cal_configs[MPU_CAL_CONFIG].ay);
+    _mpu.setZAccelOffset(mpu_cal_configs[MPU_CAL_CONFIG].az);
+    _mpu.setXGyroOffset(mpu_cal_configs[MPU_CAL_CONFIG].gx);
+    _mpu.setXGyroOffset(mpu_cal_configs[MPU_CAL_CONFIG].gy);
+    _mpu.setXGyroOffset(mpu_cal_configs[MPU_CAL_CONFIG].gz);
 
-    return connected;
+    _connected = mpu_configure(_accel_setting, _gyro_setting, _filter_setting);
+
+    return _connected;
 }
 
-bool mpu_configure(mpu6050_accel_range_t accel, mpu6050_gyro_range_t gyro, mpu6050_bandwidth_t filter)
+bool mpu_configure(mpu_accel_range_t accel, mpu_gyro_range_t gyro, mpu_filter_range_t filter)
 {
-    if (!connected)
+    if (!_connected)
         return false;
 
-    mpu.setAccelerometerRange(accel);
-    mpu.setGyroRange(gyro);
-    mpu.setFilterBandwidth(filter);
+    _mpu.setFullScaleGyroRange(gyro);
+    _mpu.setFullScaleAccelRange(accel);
+    _mpu.setDLPFMode(filter);
 
     // Confirm settings applied correctly
-    if (mpu.getAccelerometerRange() != accel ||
-        mpu.getGyroRange() != gyro ||
-        mpu.getFilterBandwidth() != filter)
-        connected = false;
+    if (_mpu.getFullScaleGyroRange() != accel ||
+        _mpu.getFullScaleAccelRange() != gyro ||
+        _mpu.getDLPFMode() != filter)
+    {
+        Serial.println("Settings not applied.");
+        _connected = false;
+        return _connected;
+    }
 
-    return connected;
+    _gyro_setting = gyro;
+    _accel_setting = accel;
+    _filter_setting = filter;
+
+    return _connected;
 }
 
 bool mpu_sample(float accel[3], float gyro[3], float* temp)
 {
-    sensors_event_t a, g, t;
-
-    if (!connected)
+    if (!_connected)
         return false;
 
-    if (!mpu.getEvent(&a, &g, &t))
-    {
-        connected = false;
-        return connected;
-    }
+    int16_t ax, ay, az, gx, gy, gz;
+    _mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
 
-    accel[0] = a.acceleration.x;
-    accel[1] = a.acceleration.y;
-    accel[2] = a.acceleration.z;
+    // Convert accelerometer register values to ms^2
+    float factor = G_M_PER_S / (UINT16_MAX / (2 * accel_ranges[_accel_setting]));
+    accel[0] = ax * factor;
+    accel[1] = ay * factor;
+    accel[2] = az * factor;
 
-    gyro[0] = g.gyro.x;
-    gyro[1] = g.gyro.y;
-    gyro[2] = g.gyro.z;
+    // Convert gyro register values to deg/s
+    factor = DEG_PER_RAD / (UINT16_MAX / (2 * gyro_ranges[_gyro_setting]));
+    gyro[0] = gx * factor;
+    gyro[1] = gy * factor;
+    gyro[2] = gz * factor;
 
-    *temp = t.temperature;
+    // Covert temperature register values to degC
+    *temp = (_mpu.getTemperature() / 340.0) + 36.53;
 
-    return connected;
+    return _connected;
 }
 
 bool mpu_console(uint8_t argc, char* argv[])

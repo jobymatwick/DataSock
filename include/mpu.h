@@ -7,7 +7,51 @@
 
 #pragma once
 
-#include <Adafruit_MPU6050.h>
+// TODO: Use the value from the config file
+#define MPU_CAL_CONFIG 0
+
+typedef enum 
+{
+    GYRO_250_DEG_PER_S = 0,
+    GYRO_500_DEG_PER_S,
+    GYRO_1000_DEG_PER_S,
+    GYRO_2000_DEG_PER_S
+} mpu_gyro_range_t;
+
+typedef enum 
+{
+    ACCEL_2_G = 0,
+    ACCEL_4_G,
+    ACCEL_8_G,
+    ACCEL_16_G
+} mpu_accel_range_t;
+
+typedef enum 
+{
+    FILTER_260_HZ = 0,
+    FILTER_184_HZ,
+    FILTER_94_HZ,
+    FILTER_44_HZ,
+    FILTER_21_HZ,
+    FILTER_10_HZ,
+    FILTER_5_HZ
+} mpu_filter_range_t;
+
+typedef struct mpu_cal_t
+{
+    int16_t ax;
+    int16_t ay;
+    int16_t az;
+    int8_t gx;
+    int8_t gy;
+    int8_t gz;
+} mpu_cal_t;
+
+const mpu_cal_t mpu_cal_configs[] =
+{
+    { 493,   1546, 930,  101, -1, -10 },
+    { -5145, 855,  1022, 29,  50, 51  }
+};
 
 /*
  * Name:    mpu_init
@@ -24,7 +68,7 @@ bool mpu_init();
  *  return: true if the IMU was configured correctly
  * Desc:    Configure the MPU 6050's register with provided values
  */
-bool mpu_configure(mpu6050_accel_range_t accel, mpu6050_gyro_range_t gyro, mpu6050_bandwidth_t filter);
+bool mpu_configure(mpu_accel_range_t accel, mpu_gyro_range_t gyro, mpu_filter_range_t filter);
 
 /*
  * Name:    mpu_sample
