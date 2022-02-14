@@ -11,14 +11,15 @@
 #include <Arduino.h>
 
 #define CONFIG_STRING_LEN 32
-typedef struct option_t
-{
-    const char* key;
-    const char* default_val;
-    char str_value[CONFIG_STRING_LEN];
-} config_option_t;
 
-extern config_option_t config_settings[];
+typedef enum
+{
+    CONFIG_DEV_NAME = 0,
+    CONFIG_POLL_RATE,
+    CONFIG_TIMEZONE,
+    CONFIG_MPU_ID,
+    CONFIG_COUNT
+} config_keys_t;
 
 /*
  * Name:    storge_init

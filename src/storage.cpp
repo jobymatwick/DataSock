@@ -17,12 +17,29 @@
 #define CONFIG_NAME "config.txt"
 #define READ_BUF_SIZE 256
 
-config_option_t config_settings[] = 
+const char* config_keys[] =
 {
-    { "poll_rate",      "100" },
-    { "device_name",    "DataSock" },
-    { "timezone",       "-8" }
+    "device_name",
+    "poll_rate",
+    "timezone",
+    "mpu_id"
 };
+
+const char* config_defaults[] =
+{
+    "DataSock",
+    "100",
+    "-8",
+    "0"
+};
+
+typedef struct config_val_t
+{
+    char str_value[CONFIG_STRING_LEN];
+    float num_value;
+} config_val_t;
+
+config_val_t config_values[CONFIG_COUNT];
 
 bool _sd_open = false;
 SdFs _sd;
@@ -31,8 +48,6 @@ void _sdError();
 
 bool storage_init()
 {
-    FsDateTime::setCallback(clock_fsStampCallback);
-
     if (!_sd.begin(SdioConfig(FIFO_SDIO)))
     {
         Serial.println("Failed to open SD card.");
@@ -41,7 +56,13 @@ bool storage_init()
         return false;
     }
 
-    _sd_open = true;
+    if (!_sd_open)
+    {
+        _sd_open = true;
+        FsDateTime::setCallback(clock_fsStampCallback);
+        _sd_open = storage_configLoad();
+    }
+
     return _sd_open;
 }
 
@@ -145,11 +166,11 @@ bool storage_configCreate()
         return false;
     }
 
-    for (uint16_t i = 0; i < sizeof(config_settings) / sizeof(config_option_t); i++)
+    for (uint16_t i = 0; i < CONFIG_COUNT; i++)
     {
-        conf_file.write(config_settings[i].key);
+        conf_file.write(config_keys[i]);
         conf_file.write("=");
-        conf_file.write(config_settings[i].default_val);
+        conf_file.write(config_defaults[i]);
         conf_file.write("\r\n");
     }
     
@@ -173,6 +194,10 @@ bool storage_configLoad()
         _sdError();
         return false;
     }
+
+    // Replace the current configs with defaults
+    for (uint8_t i = 0; i < CONFIG_COUNT; i++)
+        strcpy(config_values[i].str_value, config_defaults[i]);
 
     char buf[READ_BUF_SIZE];
     char *key_curs, *val_curs, *end_curs;
@@ -211,11 +236,11 @@ bool storage_configLoad()
         if (!strlen(key_curs)) continue;
 
         bool found = false;
-        for (uint8_t i = 0; i < sizeof(config_settings) / sizeof(config_option_t); i++)
+        for (uint8_t i = 0; i < CONFIG_COUNT; i++)
         {
-            if (!strncmp(key_curs, config_settings[i].key, strlen(config_settings[i].key)))
+            if (!strncmp(key_curs, config_keys[i], strlen(config_keys[i])))
             {
-                memcpy(config_settings[i].str_value, val_curs, end_curs - val_curs);
+                memcpy(config_values[i].str_value, val_curs, end_curs - val_curs);
                 match_cnt++;
                 found = true;
                 break;
@@ -227,6 +252,10 @@ bool storage_configLoad()
             Serial.printf("No match for key \"%s\" (%s)\r\n", key_curs, val_curs);
         }
     }
+
+    // Update all stored number values
+    for (uint8_t i = 0; i < CONFIG_COUNT; i++)
+        config_values[i].num_value = atof(config_values[i].str_value);
 
     Serial.printf("Loaded %d settings.\r\n", match_cnt);
     return match_cnt;
@@ -316,15 +345,15 @@ bool storage_console(uint8_t argc, char* argv[])
 
     if (!strcmp("print", argv[1]))
     {
-        Serial.printf("%-16s %-16s %-16s\r\n",
-                      "Config Key", "Current Value", "Default Value");
+        Serial.println("Config Key       Current Value    Num    Default Value");
 
-        for (uint8_t i = 0; i < sizeof(config_settings) / sizeof(config_option_t); i++)
+        for (uint8_t i = 0; i < CONFIG_COUNT; i++)
         {
-            Serial.printf("%-16s %-16s %-16s\r\n",
-                          config_settings[i].key,
-                          config_settings[i].str_value,
-                          config_settings[i].default_val);
+            Serial.printf("%-16s %-16s %-6.f %-16s\r\n",
+                          config_keys[i],
+                          config_values[i].str_value,
+                          config_values[i].num_value,
+                          config_defaults[i]);
         }
         
         return true;
