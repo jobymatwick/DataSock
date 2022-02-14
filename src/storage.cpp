@@ -314,6 +314,22 @@ bool storage_console(uint8_t argc, char* argv[])
         return storage_configLoad();
     }
 
+    if (!strcmp("print", argv[1]))
+    {
+        Serial.printf("%-16s %-16s %-16s\r\n",
+                      "Config Key", "Current Value", "Default Value");
+
+        for (uint8_t i = 0; i < sizeof(config_settings) / sizeof(config_option_t); i++)
+        {
+            Serial.printf("%-16s %-16s %-16s\r\n",
+                          config_settings[i].key,
+                          config_settings[i].str_value,
+                          config_settings[i].default_val);
+        }
+        
+        return true;
+    }
+
     return false;
 }
 
