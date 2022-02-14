@@ -13,6 +13,8 @@
 #include <time.h>
 #include <common/FsDateTime.h>
 
+#include "storage.h"
+
 #define SECONDS_PER_HOUR 3600
 #define TIME_STRING_BUF_LEN 32
 
@@ -48,9 +50,6 @@ time_t _localToUtc(time_t local_time);
  */
 time_t _UtcToLocal(time_t utc_time);
 
-// Local time offset from UTC in hours
-int8_t _time_zone = -8;
-
 char _time_string_buf[TIME_STRING_BUF_LEN];
 
 bool clock_init()
@@ -79,7 +78,8 @@ char* clock_getLocalNowString()
              "%04d-%02d-%02dT%02d:%02d:%02d%s%02d:00",
              year(local_time), month(local_time), day(local_time),
              hour(local_time), minute(local_time), second(local_time),
-             (_time_zone >= 0) ? "+" : "", _time_zone);
+             (((int) storage_configGetNum(CONFIG_TIMEZONE)) >= 0)
+                 ? "+" : "", ((int) storage_configGetNum(CONFIG_TIMEZONE)));
     
     return _time_string_buf;
 }
@@ -136,18 +136,6 @@ bool clock_console(uint8_t argc, char* argv[])
         return true;
     }
 
-    if (!strcmp("tz", argv[1]))
-    {
-        if (argc == 3)
-        {
-            _time_zone = atoi(argv[2]);
-        }
-
-        Serial.printf("Timezone: %s%d\r\n", (_time_zone >= 0) ? "+" : "", _time_zone);
-
-        return true;
-    }
-
     if (!strcmp("status", argv[1]))
     {
         Serial.printf("Clock has%sbeen set.\r\n", clock_isSet() ? " " : " not ");
@@ -179,10 +167,10 @@ time_t _localHumanToUtc(uint8_t hr, uint8_t min, uint8_t sec, uint8_t day, uint8
 
 time_t _localToUtc(time_t local_time)
 {
-    return local_time - (_time_zone * SECONDS_PER_HOUR);
+    return local_time - (((int) storage_configGetNum(CONFIG_TIMEZONE)) * SECONDS_PER_HOUR);
 }
 
 time_t _UtcToLocal(time_t utc_time)
 {
-    return utc_time + (_time_zone * SECONDS_PER_HOUR);
+    return utc_time + (((int) storage_configGetNum(CONFIG_TIMEZONE)) * SECONDS_PER_HOUR);
 }

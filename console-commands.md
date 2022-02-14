@@ -10,7 +10,6 @@
   - [`clock` - Real Time Clock](#clock---real-time-clock)
     - [`get` - Get Local Time](#get---get-local-time)
     - [`set` - Set Local Time/Date](#set---set-local-timedate)
-    - [`tz` - Set Timezone](#tz---set-timezone)
     - [`status` - Get Status](#status---get-status)
   - [`sd` - SD Card Storage](#sd---sd-card-storage)
     - [`init` - Connect to SD card](#init---connect-to-sd-card)
@@ -18,6 +17,7 @@
     - [`cat` - Print File Contents](#cat---print-file-contents)
     - [`default` - Create Default Config](#default---create-default-config)
     - [`load` - Load Settings file](#load---load-settings-file)
+    - [`print` - Print Settings](#print---print-settings)
     - [`format` - Wipe the SD card](#format---wipe-the-sd-card)
 
 ## `mpu` - MPU 6050
@@ -86,13 +86,6 @@ RTC: 1645815000 UTC
 Localtime: 2022-02-25T10:50:00-8:00
 ```
 
-### `tz` - Set Timezone
-Set the timezone as an offset from UTC in hours
-```
-> clock tz -8
-Timezone: -8
-```
-
 ### `status` - Get Status
 Check if the clock has been set since the last time the RTC lost power. 
 ```
@@ -139,6 +132,17 @@ Load and parse the settings file from the SD card.
 ```
 > sd load
 Loaded 3 settings.
+```
+
+### `print` - Print Settings
+Print the current settings in their string and numeric formats and their default values.
+```
+> sd print
+Config Key       Current Value    Num    Default Value
+device_name      DataSock         0      DataSock
+poll_rate        100              100    100
+timezone         -8               -8     -8
+mpu_id           0                0      0
 ```
 
 ### `format` - Wipe the SD card

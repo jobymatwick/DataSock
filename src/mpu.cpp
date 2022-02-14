@@ -12,6 +12,8 @@
 #include <I2Cdev.h>
 #include <MPU6050.h>
 
+#include "storage.h"
+
 #define G_M_PER_S 9.8066
 #define DEG_PER_RAD 0.0174533
 
@@ -41,12 +43,12 @@ bool mpu_init()
 
     _connected = true;
 
-    _mpu.setXAccelOffset(mpu_cal_configs[MPU_CAL_CONFIG].ax);
-    _mpu.setYAccelOffset(mpu_cal_configs[MPU_CAL_CONFIG].ay);
-    _mpu.setZAccelOffset(mpu_cal_configs[MPU_CAL_CONFIG].az);
-    _mpu.setXGyroOffset(mpu_cal_configs[MPU_CAL_CONFIG].gx);
-    _mpu.setXGyroOffset(mpu_cal_configs[MPU_CAL_CONFIG].gy);
-    _mpu.setXGyroOffset(mpu_cal_configs[MPU_CAL_CONFIG].gz);
+    _mpu.setXAccelOffset(mpu_cal_configs[(int) storage_configGetNum(CONFIG_MPU_ID)].ax);
+    _mpu.setYAccelOffset(mpu_cal_configs[(int) storage_configGetNum(CONFIG_MPU_ID)].ay);
+    _mpu.setZAccelOffset(mpu_cal_configs[(int) storage_configGetNum(CONFIG_MPU_ID)].az);
+    _mpu.setXGyroOffset(mpu_cal_configs[(int) storage_configGetNum(CONFIG_MPU_ID)].gx);
+    _mpu.setXGyroOffset(mpu_cal_configs[(int) storage_configGetNum(CONFIG_MPU_ID)].gy);
+    _mpu.setXGyroOffset(mpu_cal_configs[(int) storage_configGetNum(CONFIG_MPU_ID)].gz);
 
     _connected = mpu_configure(_accel_setting, _gyro_setting, _filter_setting);
 

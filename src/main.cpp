@@ -15,22 +15,22 @@
 
 #define LED_PERIOD 100
 #define CONSOLE_PERIOD 50
-// TODO: Use the value in the config file
-#define ADC_PERIOD 250
 
 uint32_t next_led = LED_PERIOD;
 uint32_t next_console = CONSOLE_PERIOD;
-uint32_t next_adc = ADC_PERIOD;
+uint32_t next_adc = 250;
 
 void setup()
 {
     pinMode(LED_BUILTIN, OUTPUT);
 
+    // Init SD and load config first!
+    storage_init();
+    
     adc_init();
     console_init();
     mpu_init();
     clock_init();
-    storage_init();
 }
 
 void loop()
@@ -49,7 +49,7 @@ void loop()
 
     if (millis() >= next_adc)
     {
-        next_adc += ADC_PERIOD;
+        next_adc += storage_configGetNum(CONFIG_POLL_RATE);
         adc_readTask(NULL);
     }
 }

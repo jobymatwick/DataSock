@@ -8,8 +8,6 @@
 #pragma once
 
 #include <Arduino.h>
-// TODO: Use the value from the config file
-#define MPU_CAL_CONFIG 0
 
 typedef enum 
 {
