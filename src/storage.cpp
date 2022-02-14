@@ -261,6 +261,17 @@ bool storage_configLoad()
     return match_cnt;
 }
 
+float storage_configGetNum(config_keys_t option)
+{
+    return config_values[option].num_value;
+}
+
+char* storage_configGetString(config_keys_t option)
+{
+    return config_values[option].str_value;
+}
+
+
 bool storage_console(uint8_t argc, char* argv[])
 {
     if (!strcmp("init", argv[1]))

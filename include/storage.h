@@ -51,6 +51,22 @@ bool storage_configCreate();
 bool storage_configLoad();
 
 /*
+ * Name:    storage_configGetNum
+ *  option: Config option to get the value of
+ *  return: Numeric value of current config value
+ * Desc:    Get the numeric value of a configuration option
+ */
+float storage_configGetNum(config_keys_t option);
+
+/*
+ * Name:    storage_configGetNum
+ *  option: Config option to get the value of
+ *  return: String value of current config value
+ * Desc:    Get the string value of a configuration option
+ */
+char* storage_configGetString(config_keys_t option);
+
+/*
  * Name:    storage_console
  *  argc:   number of arguments
  *  argv:   list of arguments
