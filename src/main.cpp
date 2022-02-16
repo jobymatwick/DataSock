@@ -11,6 +11,7 @@
 #include "console.h"
 #include "mpu.h"
 #include "clock.h"
+#include "logger.h"
 #include "storage.h"
 
 #define LED_PERIOD 100
@@ -31,6 +32,8 @@ void setup()
     adc_init();
     mpu_init();
     clock_init();
+
+    logger_startSampling();
 }
 
 void loop()
@@ -45,11 +48,5 @@ void loop()
     {
         next_console += CONSOLE_PERIOD;
         console_tick(NULL);
-    }
-
-    if (millis() >= next_adc)
-    {
-        next_adc += storage_configGetNum(CONFIG_POLL_RATE);
-        adc_readTask(NULL);
     }
 }

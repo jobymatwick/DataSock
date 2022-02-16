@@ -28,4 +28,6 @@ typedef struct log_entry_t
 
 void logger_ISR();
 
+void logger_startSampling();
+
 void logger_serviceBuffer();

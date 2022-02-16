@@ -17,6 +17,8 @@
 #define CSV_ROW_BUF_LEN 200
 #define SD_RINGBUF_LEN 512 * 100
 
+IntervalTimer _sample_timer;
+
 log_entry_t _circ_buf[CIRC_BUF_LEN];
 log_entry_t* _head = _circ_buf;
 log_entry_t* _tail = _circ_buf;
@@ -38,6 +40,26 @@ void logger_ISR()
 
     // Increment write head
     _head = ((_head - _circ_buf) + 1 < CIRC_BUF_LEN) ? _head + 1 : _circ_buf;
+
+    // Update sample timer period
+    logger_startSampling();
+}
+
+void logger_startSampling()
+{
+    static uint16_t last_period = 0;
+    uint16_t this_period = (uint16_t) storage_configGetNum(CONFIG_POLL_RATE);
+
+    if (this_period != last_period)
+    {
+        if (!_sample_timer.begin(logger_ISR, this_period * 1000))
+        {
+            Serial.println("Failed to start sample timer");
+            return;
+        }
+
+        last_period = this_period;
+    }
 }
 
 void logger_serviceBuffer()
