@@ -69,10 +69,11 @@ Prints the next `n` scheduled ADC samples as they occur. A value of -1 starts in
 Commands to interface with the real time clock within the Teensy. The RTC is configred with the compile time of the program by default and with a timezone of UTC-8 (Pacific). Unless a battery is connected to the Teensy VBat pins, the set time will be reset to default on power loss.
 
 ### `get` - Get Local Time
-Get the local time as an ISO 8601 timestamp (`YYYY-MM-DDTHH:MM:SS+TZ`)
+Get the local time as an ISO 8601 timestamp (`YYYY-MM-DDTHH:MM:SS+TZ`) and the UTC time as seconds and milliseconds since epoch.
 ```
 > clock get
-Localtime: 2022-01-30T23:09:09-8:00
+Localtime: 2022-02-15T19:58:49-8:00
+UTC Epoch: 1644983929.737
 ```
 
 ### `set` - Set Local Time/Date

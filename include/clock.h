@@ -41,11 +41,18 @@ bool clock_isSet();
 
 /*
  * Name:    clock_fsStampCallback
- *  date    pointer to date variable to populate
+ *  date:   pointer to date variable to populate
  *  time:   pointer to time variable to populate
  * Desc:    Callback function to set timestamps in files
  */
 void clock_fsStampCallback(uint16_t* date, uint16_t* time);
+
+/*
+ * Name:    clock_millis
+ *  return: milliseconds into the current RTC second (0-999)
+ * Desc:    Get the current number of milliseconds into the current second.
+ */
+uint16_t clock_millis();
 
 /*
  * Name:    clock_console
