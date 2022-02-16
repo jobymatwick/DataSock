@@ -22,7 +22,9 @@ const char* config_keys[] =
     "device_name",
     "poll_rate",
     "timezone",
-    "mpu_id"
+    "mpu_id",
+    "channel_bottom",
+    "channel_top"
 };
 
 const char* config_defaults[] =
@@ -30,7 +32,9 @@ const char* config_defaults[] =
     "DataSock",
     "100",
     "-8",
-    "0"
+    "0",
+    "0",
+    "9"
 };
 
 typedef struct config_val_t

@@ -18,6 +18,8 @@ typedef enum
     CONFIG_POLL_RATE,
     CONFIG_TIMEZONE,
     CONFIG_MPU_ID,
+    CONFIG_CHANNEL_BOT,
+    CONFIG_CHANNEL_TOP,
     CONFIG_COUNT
 } config_keys_t;
 
