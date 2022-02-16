@@ -52,14 +52,12 @@ bool storage_init()
     {
         Serial.println("Failed to open SD card.");
         _sdError();
-
-        return false;
+        storage_loadDefault();
     }
-
-    if (!_sd_open)
+    else
     {
-        _sd_open = true;
         FsDateTime::setCallback(clock_fsStampCallback);
+        _sd_open = true;
         _sd_open = storage_configLoad();
     }
 
@@ -145,6 +143,17 @@ bool storage_format()
     return false;
 }
 
+void storage_loadDefault()
+{
+    // Replace the current configs with defaults
+    for (uint8_t i = 0; i < CONFIG_COUNT; i++)
+    {
+        strcpy(config_values[i].str_value, config_defaults[i]);
+        config_values[i].num_value = atof(config_values[i].str_value);
+    }
+    Serial.printf("Set %d config options to defaults.\r\n", CONFIG_COUNT);
+}
+
 bool storage_configCreate()
 {
     if (!_sd_open)
@@ -182,6 +191,8 @@ bool storage_configCreate()
 
 bool storage_configLoad()
 {
+    storage_loadDefault();
+
     if (!_sd_open)
     {
         Serial.println("SD not open!");
@@ -194,10 +205,6 @@ bool storage_configLoad()
         _sdError();
         return false;
     }
-
-    // Replace the current configs with defaults
-    for (uint8_t i = 0; i < CONFIG_COUNT; i++)
-        strcpy(config_values[i].str_value, config_defaults[i]);
 
     char buf[READ_BUF_SIZE];
     char *key_curs, *val_curs, *end_curs;
@@ -241,6 +248,7 @@ bool storage_configLoad()
             if (!strncmp(key_curs, config_keys[i], strlen(config_keys[i])))
             {
                 memcpy(config_values[i].str_value, val_curs, end_curs - val_curs);
+                config_values[i].num_value = atof(config_values[i].str_value);
                 match_cnt++;
                 found = true;
                 break;
@@ -251,13 +259,9 @@ bool storage_configLoad()
         {
             Serial.printf("No match for key \"%s\" (%s)\r\n", key_curs, val_curs);
         }
-    }
+    }        
 
-    // Update all stored number values
-    for (uint8_t i = 0; i < CONFIG_COUNT; i++)
-        config_values[i].num_value = atof(config_values[i].str_value);
-
-    Serial.printf("Loaded %d settings.\r\n", match_cnt);
+    Serial.printf("Loaded %d settings from \"" CONFIG_NAME "\".\r\n", match_cnt);
     return match_cnt;
 }
 

@@ -37,6 +37,12 @@ bool storage_init();
 bool storage_format();
 
 /*
+ * Name:    storage_configDefault
+ * Desc:    Set the current config values to the defaults.
+ */
+void storage_loadDefault();
+
+/*
  * Name:    storage_configCreate
  *  return: true if successfully created config file with default values
  * Desc:    Create or replace the "config.txt" file on the SD card with defaults

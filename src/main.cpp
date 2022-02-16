@@ -27,8 +27,8 @@ void setup()
     // Init SD and load config first!
     storage_init();
     
-    adc_init();
     console_init();
+    adc_init();
     mpu_init();
     clock_init();
 }
