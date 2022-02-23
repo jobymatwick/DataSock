@@ -83,8 +83,17 @@ bool mpu_configure(mpu_accel_range_t accel, mpu_gyro_range_t gyro, mpu_filter_ra
 
 bool mpu_sample(float accel[3], float gyro[3], float* temp)
 {
-    if (!_connected)
-        return false;
+    if (!_connected || !_mpu.testConnection())
+    {
+        _connected = false;
+
+        // Zero everthing
+        memset(accel, 0, sizeof(float) * 3);
+        memset(gyro, 0, sizeof(float) * 3);
+        memset(temp, 0, sizeof(float));
+
+        return _connected;
+    }
 
     int16_t ax, ay, az, gx, gy, gz;
     _mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);

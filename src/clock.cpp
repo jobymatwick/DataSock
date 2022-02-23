@@ -50,6 +50,15 @@ time_t _localToUtc(time_t local_time);
  */
 time_t _UtcToLocal(time_t utc_time);
 
+/*
+ * Name:    _repRead32
+ *  location: address to read from
+ *  return: Steady value at location
+ * Desc:    Repeatedly read from an address until the value is steady. Used to
+ *            read from dynamic RTC registers that have a slow ripple-overflow.
+ */
+uint32_t _repRead32(volatile uint32_t* location);
+
 char _time_string_buf[TIME_STRING_BUF_LEN];
 
 bool clock_init()
@@ -97,12 +106,25 @@ void clock_fsStampCallback(uint16_t* date, uint16_t* time)
     *time = FS_TIME(hour(local_time), minute(local_time), second(local_time));
 }
 
+uint16_t clock_millis()
+{
+    uint32_t prescaler = _repRead32(&RTC_TPR);    
+
+    // Scale ticks @ 32.768KHz to microseconds
+    //   source: https://community.nxp.com/thread/378715
+    uint32_t micros = (prescaler * (1000000UL / 64) + 16384 / 64) / (32768 / 64);
+    uint32_t seconds = _repRead32(&RTC_TSR);
+
+    return ((seconds * 1000) + (micros / 1000)) % 1000; // ms into second
+}
+
 bool clock_console(uint8_t argc, char* argv[])
 {
     if (!strcmp("get", argv[1]))
     {
         Serial.printf("Localtime: %s\r\n", clock_getLocalNowString());
-        
+        Serial.printf("UTC Epoch: %d.%03d\r\n", now(), clock_millis());
+
         return true;
     }
 
@@ -173,4 +195,17 @@ time_t _localToUtc(time_t local_time)
 time_t _UtcToLocal(time_t utc_time)
 {
     return utc_time + (((int) storage_configGetNum(CONFIG_TIMEZONE)) * SECONDS_PER_HOUR);
+}
+
+uint32_t _repRead32(volatile uint32_t* location)
+{
+    uint32_t sample_a = 0, sample_b = 1;
+
+    while (sample_a != sample_b)
+    {
+        sample_a = *location;
+        sample_b = *location;
+    }
+
+    return sample_a;
 }

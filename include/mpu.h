@@ -76,7 +76,7 @@ bool mpu_configure(mpu_accel_range_t accel, mpu_gyro_range_t gyro, mpu_filter_ra
  *  temp:   temperature reading (degC)
  * Desc:    Get a single MPU 6050 sample
  */
-bool mpu_sample(float accel[3], float gyro[3], float temp);
+bool mpu_sample(float accel[3], float gyro[3], float* temp);
 
 /*
  * Name:    mpu_console

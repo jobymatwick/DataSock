@@ -33,7 +33,7 @@ void _handleCommand(char* command);
 void console_init()
 {
     Serial.begin(BAUD_RATE);
-    Serial.println("Starting up!\r\n>");
+    Serial.print("Starting up!\r\n> ");
 }
 
 bool console_tick(void* unused)
