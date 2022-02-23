@@ -26,9 +26,16 @@ typedef enum
 /*
  * Name:    storge_init
  *  return: true if successfully communicating with SD card
- * Desc:    Attempt to communicate with SD card and begin the connection
+ * Desc:    Attempt to communicate with SD card and load config
  */
 bool storage_init();
+
+/*
+ * Name:    storge_start
+ *  return: true if successfully communicating with SD card
+ * Desc:    Just attempt to communicate with SD card
+ */
+bool storage_start();
 
 /*
  * Name:    storage_format
@@ -73,6 +80,16 @@ float storage_configGetNum(config_keys_t option);
  * Desc:    Get the string value of a configuration option
  */
 char* storage_configGetString(config_keys_t option);
+
+/*
+ * Name:    storage_addToLogFile
+ *  text:   String to append to current log file
+ *  len:    max number of bytes to append
+ *  return: True if len bytes were written to file
+ * Desc:    Add data to the current logfile. The file is created and opened if
+ *            needed and automatically swapped to a new file every hour.
+ */
+bool storage_addToLogFile(char* text, uint16_t len);
 
 /*
  * Name:    storage_console

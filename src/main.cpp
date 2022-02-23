@@ -19,7 +19,6 @@
 
 uint32_t next_led = LED_PERIOD;
 uint32_t next_console = CONSOLE_PERIOD;
-uint32_t next_adc = 250;
 
 void setup()
 {
@@ -49,4 +48,6 @@ void loop()
         next_console += CONSOLE_PERIOD;
         console_tick(NULL);
     }
+
+    logger_serviceBuffer();
 }

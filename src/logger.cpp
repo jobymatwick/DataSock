@@ -13,37 +13,21 @@
 #include "mpu.h"
 #include "storage.h"
 
-#define CIRC_BUF_LEN 5
+#define CIRC_BUF_LEN 40
 #define CSV_ROW_BUF_LEN 200
-#define SD_RINGBUF_LEN 512 * 100
+
+/*
+ * Name:    _sampleISR
+ * Desc:    Sample from ADC channels and MPU and store readings to buffer
+ * !!! TO BE CALLED BY TIMER ISR !!!
+ */
+void _sampleISR();
 
 IntervalTimer _sample_timer;
 
 log_entry_t _circ_buf[CIRC_BUF_LEN];
 log_entry_t* _head = _circ_buf;
 log_entry_t* _tail = _circ_buf;
-
-void logger_ISR()
-{
-    uint8_t bottom = (uint8_t) storage_configGetNum(CONFIG_CHANNEL_BOT);
-    uint8_t top = (uint8_t) storage_configGetNum(CONFIG_CHANNEL_TOP);
-    for (uint8_t i = 0; i < (top - bottom) + 1; i++)
-    {
-        _head->adc_data[i] = bottom + i;
-    }
-
-    // Collect data and a timestamp
-    adc_sample(_head->adc_data, (top - bottom) + 1);
-    mpu_sample(_head->mpu_accel, _head->mpu_gyro, &_head->mpu_temp);
-    _head->time = clock_getLocalNowSeconds();
-    _head->millis = clock_millis();
-
-    // Increment write head
-    _head = ((_head - _circ_buf) + 1 < CIRC_BUF_LEN) ? _head + 1 : _circ_buf;
-
-    // Update sample timer period
-    logger_startSampling();
-}
 
 void logger_startSampling()
 {
@@ -52,7 +36,7 @@ void logger_startSampling()
 
     if (this_period != last_period)
     {
-        if (!_sample_timer.begin(logger_ISR, this_period * 1000))
+        if (!_sample_timer.begin(_sampleISR, this_period * 1000))
         {
             Serial.println("Failed to start sample timer");
             return;
@@ -75,8 +59,45 @@ void logger_serviceBuffer()
 
     char row_buf[CSV_ROW_BUF_LEN];
 
-    // TODO: Add CSV row to SD buffer and
+    // Add timestamp and MPU data to string
+    uint16_t len = snprintf(row_buf, CSV_ROW_BUF_LEN,
+    "%10lu.%03d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
+    _tail->time, _tail->millis,
+    _tail->mpu_accel[0], _tail->mpu_accel[1], _tail->mpu_accel[2],
+    _tail->mpu_gyro[0], _tail->mpu_gyro[1], _tail->mpu_gyro[2],
+    _tail->mpu_temp);
 
-    // Increment read tail
-    _tail = ((_tail - _circ_buf) + 1 < CIRC_BUF_LEN) ? _tail + 1 : _circ_buf;
+    // Add each of the configured channels
+    uint8_t count = (uint8_t) storage_configGetNum(CONFIG_CHANNEL_TOP) -
+                    (uint8_t) storage_configGetNum(CONFIG_CHANNEL_BOT);
+    for (uint8_t i = 0; i < count; i++)
+        len += snprintf(row_buf + len, CSV_ROW_BUF_LEN - len, ",%d", _tail->adc_data[i]);
+    
+    len += snprintf(row_buf + len, CSV_ROW_BUF_LEN - len, "\r\n");
+
+    // Write to the SD and increment circular buffer if successful
+    if (storage_addToLogFile(row_buf, len))
+        _tail = ((_tail - _circ_buf) + 1 < CIRC_BUF_LEN) ? _tail + 1 : _circ_buf;
+}
+
+void _sampleISR()
+{
+    uint8_t bottom = (uint8_t) storage_configGetNum(CONFIG_CHANNEL_BOT);
+    uint8_t top = (uint8_t) storage_configGetNum(CONFIG_CHANNEL_TOP);
+    for (uint8_t i = 0; i < (top - bottom) + 1; i++)
+    {
+        _head->adc_data[i] = bottom + i;
+    }
+
+    // Collect data and a timestamp
+    adc_sample(_head->adc_data, (top - bottom) + 1);
+    mpu_sample(_head->mpu_accel, _head->mpu_gyro, &_head->mpu_temp);
+    _head->time = clock_getLocalNowSeconds();
+    _head->millis = clock_millis();
+
+    // Increment write head
+    _head = ((_head - _circ_buf) + 1 < CIRC_BUF_LEN) ? _head + 1 : _circ_buf;
+
+    // Update sample timer period
+    logger_startSampling();
 }

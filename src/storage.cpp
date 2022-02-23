@@ -10,8 +10,10 @@
 
 #include <SdFat.h>
 #include <sdios.h>
+#include <TimeLib.h>
 
 #include "clock.h"
+#include "logger.h"
 
 #define ERASE_SIZE 262144L
 #define CONFIG_NAME "config.txt"
@@ -52,7 +54,7 @@ void _sdError();
 
 bool storage_init()
 {
-    if (!_sd.begin(SdioConfig(FIFO_SDIO)))
+    if (!storage_start())
     {
         Serial.println("Failed to open SD card.");
         _sdError();
@@ -68,6 +70,22 @@ bool storage_init()
     return _sd_open;
 }
 
+bool storage_start()
+{
+    static bool connected = false;
+
+    _sd_open = _sd.begin(SdioConfig(FIFO_SDIO));
+
+    if (!connected && _sd_open)
+        Serial.println("SD connected");
+
+    if (connected && !_sd_open)
+        Serial.println("SD disconnected");
+
+    connected = _sd_open;
+    return _sd_open;
+}
+
 bool storage_format()
 {
     if (_sd_open)
@@ -76,7 +94,7 @@ bool storage_format()
         _sd_open = false;
     }
 
-    _sd.cardBegin(SdioConfig(FIFO_SDIO));
+    storage_start();
 
     if (!_sd.card() || _sd.card()->errorCode())
     {
@@ -141,7 +159,7 @@ bool storage_format()
 
     _sd.end();
 
-    if (storage_init() || storage_init() || storage_init() || storage_init())
+    if (storage_start() || storage_start() || storage_start() || storage_start())
         return storage_configCreate();
 
     return false;
@@ -197,11 +215,14 @@ bool storage_configLoad()
 {
     storage_loadDefault();
 
-    if (!_sd_open)
+    if (!storage_start())
     {
         Serial.println("SD not open!");
         return false;
     }
+
+    if (!_sd.exists(CONFIG_NAME))
+        storage_configCreate();
 
     FsFile conf_file;
     if (!conf_file.open(CONFIG_NAME, O_RDONLY))
@@ -279,6 +300,47 @@ char* storage_configGetString(config_keys_t option)
     return config_values[option].str_value;
 }
 
+bool storage_addToLogFile(char* text, uint16_t len)
+{
+    static FsFile file;
+    static int8_t file_hour = -1;
+
+    if (!storage_start())
+        return false;
+
+    uint32_t now = clock_getLocalNowSeconds();
+    int8_t this_hour = hour(now);
+
+    static char filename[50];
+    snprintf(filename, 50, "%s_%04d-%02d-%02d_%02d.csv",
+             storage_configGetString(CONFIG_DEV_NAME),
+             year(now), month(now), day(now), hour(now));
+    
+    // Open new file if onto next hour or first run
+    if (this_hour != file_hour || !_sd.exists(filename))
+    {
+        if (file.isOpen())
+            file.close();
+
+        Serial.printf("Starting file \"%s\"...\r\n", filename);
+        file_hour = this_hour;
+    }
+
+    if (!file.isOpen())
+    {
+        if (!file.open(filename, O_RDWR | O_CREAT | O_APPEND))
+        {
+            Serial.println("Failed to open file!");
+            return false;
+        }
+    }
+
+    if (file.write(text, len) != len)
+        return false;
+
+    file.flush();
+    return true;
+}
 
 bool storage_console(uint8_t argc, char* argv[])
 {
@@ -294,7 +356,7 @@ bool storage_console(uint8_t argc, char* argv[])
 
     if (!strcmp("ls", argv[1]))
     {
-        if (!storage_init())
+        if (!storage_start())
             return false;
 
         Serial.println("Last Modified    Size (Bytes) Filename");
@@ -305,7 +367,7 @@ bool storage_console(uint8_t argc, char* argv[])
 
     if (!strcmp("cat", argv[1]))
     {
-        if (!storage_init())
+        if (!storage_start())
             return false;
 
         if (argc < 3)
@@ -351,7 +413,7 @@ bool storage_console(uint8_t argc, char* argv[])
 
     if (!strcmp("default", argv[1]))
     {
-        if (!storage_init())
+        if (!storage_start())
             return false;
 
         return storage_configCreate();
@@ -375,6 +437,12 @@ bool storage_console(uint8_t argc, char* argv[])
                           config_defaults[i]);
         }
         
+        return true;
+    }
+
+    if (!strcmp("p", argv[1]))
+    {
+        logger_serviceBuffer();
         return true;
     }
 

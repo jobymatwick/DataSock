@@ -25,9 +25,14 @@ typedef struct log_entry_t
     uint16_t adc_data[LOGGER_MAX_ADC_CHANNELS];
 } log_entry_t;
 
-
-void logger_ISR();
-
+/*
+ * Name:    logger_startSampling
+ * Desc:    Start the timer ISR at the configured period
+ */
 void logger_startSampling();
 
+/*
+ * Name:    logger_serviceBuffer
+ * Desc:    Attempt to write the next sample to the SD card as a CSV row
+ */
 void logger_serviceBuffer();
