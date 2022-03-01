@@ -32,6 +32,19 @@ typedef struct log_entry_t
 void logger_startSampling();
 
 /*
+ * Name:    logger_stopSampling
+ * Desc:    Stop the sample timer
+ */
+void logger_stopSampling();
+
+/*
+ * Name:    logger_getState
+ *  return: true if the sample timer is running, else false
+ * Desc:    Get the status of the sample timer ISR
+ */
+bool logger_getState();
+
+/*
  * Name:    logger_serviceBuffer
  * Desc:    Attempt to write the next sample to the SD card as a CSV row
  */

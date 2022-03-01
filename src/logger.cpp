@@ -28,6 +28,7 @@ IntervalTimer _sample_timer;
 log_entry_t _circ_buf[CIRC_BUF_LEN];
 log_entry_t* _head = _circ_buf;
 log_entry_t* _tail = _circ_buf;
+bool _running = false;
 
 void logger_startSampling()
 {
@@ -39,11 +40,25 @@ void logger_startSampling()
         if (!_sample_timer.begin(_sampleISR, this_period * 1000))
         {
             Serial.println("Failed to start sample timer");
+            _running = false;
             return;
         }
 
         last_period = this_period;
     }
+
+    _running = true;
+}
+
+void logger_stopSampling()
+{
+    _running = false;
+    _sample_timer.end();
+}
+
+bool logger_getState()
+{
+    return _running;
 }
 
 void logger_serviceBuffer()
@@ -98,6 +113,6 @@ void _sampleISR()
     // Increment write head
     _head = ((_head - _circ_buf) + 1 < CIRC_BUF_LEN) ? _head + 1 : _circ_buf;
 
-    // Update sample timer period
-    logger_startSampling();
+    // Update sample timer period if still running
+    if (_running) logger_startSampling();
 }
