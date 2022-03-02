@@ -106,7 +106,7 @@ void _sampleISR()
 
     // Collect data and a timestamp
     adc_sample(_head->adc_data, (top - bottom) + 1);
-    mpu_sample(_head->mpu_accel, _head->mpu_gyro, &_head->mpu_temp);
+    mpu_sampleFloat(_head->mpu_accel, _head->mpu_gyro, &_head->mpu_temp);
     _head->time = clock_getLocalNowSeconds();
     _head->millis = clock_millis();
 
