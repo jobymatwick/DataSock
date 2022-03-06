@@ -111,9 +111,9 @@ bool mpu_sampleFloat(float accel[3], float gyro[3], float* temp)
     if (!mpu_sampleRaw(a, g, &t))
     {
         // Zero everthing
-        memset(accel, 0, sizeof(accel) * 3);
-        memset(gyro, 0, sizeof(gyro) * 3);
-        memset(temp, 0, sizeof(temp) * 1);
+        memset(accel, 0, sizeof(*accel) * 3);
+        memset(gyro, 0, sizeof(*gyro) * 3);
+        memset(temp, 0, sizeof(*temp) * 1);
 
         return _connected;
     }
@@ -124,7 +124,7 @@ bool mpu_sampleFloat(float accel[3], float gyro[3], float* temp)
     for (uint8_t i = 0; i < 3; i++)
     {
         accel[i] = a[i] * a_factor;
-        gyro[i] = g[i] * a_factor;
+        gyro[i] = g[i] * g_factor;
     }
 
     // Covert temperature register values to degC

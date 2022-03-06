@@ -76,8 +76,7 @@ void logger_serviceBuffer()
 
     // Add timestamp and MPU data to string
     uint16_t len = snprintf(row_buf, CSV_ROW_BUF_LEN,
-    "%10lu.%03d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-    _tail->time, _tail->millis,
+    "%10lu.%03d,%d,%d,%d,%d,%d,%d,%d", _tail->time, _tail->millis,
     _tail->mpu_accel[0], _tail->mpu_accel[1], _tail->mpu_accel[2],
     _tail->mpu_gyro[0], _tail->mpu_gyro[1], _tail->mpu_gyro[2],
     _tail->mpu_temp);
@@ -106,7 +105,7 @@ void _sampleISR()
 
     // Collect data and a timestamp
     adc_sample(_head->adc_data, (top - bottom) + 1);
-    mpu_sampleFloat(_head->mpu_accel, _head->mpu_gyro, &_head->mpu_temp);
+    mpu_sampleRaw(_head->mpu_accel, _head->mpu_gyro, &_head->mpu_temp);
     _head->time = clock_getLocalNowSeconds();
     _head->millis = clock_millis();
 

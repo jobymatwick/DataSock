@@ -17,9 +17,9 @@ typedef struct log_entry_t
 {
     uint32_t time;          // Seconds since epoch
     uint16_t millis;        // Milliseconds into current second
-    float    mpu_accel[3];  // MPU accelerometer X, Y, Z (m/s^2)
-    float    mpu_gyro[3];   // MPU gyro X, Y, Z (rad/s)
-    float    mpu_temp;      // MPU temperature (degC)
+    int16_t  mpu_accel[3];  // MPU accelerometer X, Y, Z (m/s^2)
+    int16_t  mpu_gyro[3];   // MPU gyro X, Y, Z (rad/s)
+    int16_t  mpu_temp;      // MPU temperature (degC)
 
     // Array of raw 13-bit ADC readings
     uint16_t adc_data[LOGGER_MAX_ADC_CHANNELS];
