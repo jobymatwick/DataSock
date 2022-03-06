@@ -28,6 +28,7 @@ IntervalTimer _sample_timer;
 log_entry_t _circ_buf[CIRC_BUF_LEN];
 log_entry_t* _head = _circ_buf;
 log_entry_t* _tail = _circ_buf;
+bool _running = false;
 
 void logger_startSampling()
 {
@@ -39,11 +40,25 @@ void logger_startSampling()
         if (!_sample_timer.begin(_sampleISR, this_period * 1000))
         {
             Serial.println("Failed to start sample timer");
+            _running = false;
             return;
         }
 
         last_period = this_period;
     }
+
+    _running = true;
+}
+
+void logger_stopSampling()
+{
+    _running = false;
+    _sample_timer.end();
+}
+
+bool logger_getState()
+{
+    return _running;
 }
 
 void logger_serviceBuffer()
@@ -61,8 +76,7 @@ void logger_serviceBuffer()
 
     // Add timestamp and MPU data to string
     uint16_t len = snprintf(row_buf, CSV_ROW_BUF_LEN,
-    "%10lu.%03d,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f",
-    _tail->time, _tail->millis,
+    "%10lu.%03d,%d,%d,%d,%d,%d,%d,%d", _tail->time, _tail->millis,
     _tail->mpu_accel[0], _tail->mpu_accel[1], _tail->mpu_accel[2],
     _tail->mpu_gyro[0], _tail->mpu_gyro[1], _tail->mpu_gyro[2],
     _tail->mpu_temp);
@@ -91,13 +105,13 @@ void _sampleISR()
 
     // Collect data and a timestamp
     adc_sample(_head->adc_data, (top - bottom) + 1);
-    mpu_sample(_head->mpu_accel, _head->mpu_gyro, &_head->mpu_temp);
+    mpu_sampleRaw(_head->mpu_accel, _head->mpu_gyro, &_head->mpu_temp);
     _head->time = clock_getLocalNowSeconds();
     _head->millis = clock_millis();
 
     // Increment write head
     _head = ((_head - _circ_buf) + 1 < CIRC_BUF_LEN) ? _head + 1 : _circ_buf;
 
-    // Update sample timer period
-    logger_startSampling();
+    // Update sample timer period if still running
+    if (_running) logger_startSampling();
 }

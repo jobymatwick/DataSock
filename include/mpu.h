@@ -70,13 +70,36 @@ bool mpu_init();
 bool mpu_configure(mpu_accel_range_t accel, mpu_gyro_range_t gyro, mpu_filter_range_t filter);
 
 /*
- * Name:    mpu_sample
+ * Name:    mpu_getAccelRange
+ *  return: currently configured accelerometer range
+ * Desc:    Get the currently configured accelerometer range
+ */
+uint8_t mpu_getAccelRange();
+
+/*
+ * Name:    mpu_getGyroRange
+ *  return: currently configured gyro range
+ * Desc:    Get the currently configured gyro range
+ */
+uint16_t mpu_getGyroRange();
+
+/*
+ * Name:    mpu_sampleRaw
+ *  accel:  accelerometer data {x, y, z} (raw counts)
+ *  gyro:   gyro data {x, y, z} (raw counts)
+ *  temp:   temperature reading (raw counts)
+ * Desc:    Get a single MPU 6050 sample and keep in raw integer format
+ */
+bool mpu_sampleRaw(int16_t accel[3], int16_t gyro[3], int16_t* temp);
+
+/*
+ * Name:    mpu_sampleFloat
  *  accel:  accelerometer data {x, y, z} (m/s^2)
  *  gyro:   gyro data {x, y, z} (rad/s)
  *  temp:   temperature reading (degC)
- * Desc:    Get a single MPU 6050 sample
+ * Desc:    Get a single MPU 6050 sample and convert to real units
  */
-bool mpu_sample(float accel[3], float gyro[3], float* temp);
+bool mpu_sampleFloat(float accel[3], float gyro[3], float* temp);
 
 /*
  * Name:    mpu_console
