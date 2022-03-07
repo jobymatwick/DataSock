@@ -9,6 +9,7 @@
 #include "logger.h"
 
 #include "adc.h"
+#include "bt.h"
 #include "clock.h"
 #include "mpu.h"
 #include "storage.h"
@@ -88,6 +89,9 @@ void logger_serviceBuffer()
         len += snprintf(row_buf + len, CSV_ROW_BUF_LEN - len, ",%d", _tail->adc_data[i]);
     
     len += snprintf(row_buf + len, CSV_ROW_BUF_LEN - len, "\r\n");
+
+    if (bt_isLive())
+        bt_sendSample(_tail);
 
     // Write to the SD and increment circular buffer if successful
     if (storage_addToLogFile(row_buf, len))

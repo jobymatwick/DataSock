@@ -98,6 +98,13 @@ bool clock_isSet()
     return RTC_SET_FLAG;
 }
 
+void clock_set(uint32_t utc_time)
+{
+    Teensy3Clock.set(utc_time);
+    setTime(utc_time);
+    RTC_SET_FLAG = 1;
+}
+
 void clock_fsStampCallback(uint16_t* date, uint16_t* time)
 {
     time_t local_time = clock_getLocalNowSeconds();
@@ -148,9 +155,7 @@ bool clock_console(uint8_t argc, char* argv[])
             return false;
         }
 
-        Teensy3Clock.set(time);
-        setTime(time);
-        RTC_SET_FLAG = 1;
+        clock_set(time);
 
         Serial.printf("RTC: %d UTC\r\n", time);
         Serial.printf("Localtime: %s\r\n", clock_getLocalNowString());

@@ -8,6 +8,7 @@
 #pragma once
 
 #include "adc.h"
+#include "bt.h"
 #include "mpu.h"
 #include "clock.h"
 #include "storage.h"
@@ -28,7 +29,8 @@ const console_command_t command_table[] =
     { "mpu", mpu_console },
     { "adc", adc_console },
     { "clock", clock_console },
-    { "sd", storage_console }
+    { "sd", storage_console },
+    { "bt", bt_console }
 };
 
 /*

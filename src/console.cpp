@@ -28,7 +28,7 @@ char* console_cursor = console_buffer;
  *  command: command to run handler for
  * Desc:     Parse a command and its arguments and run the asso
  */
-void _handleCommand(char* command);
+static void _handleCommand(char* command);
 
 void console_init()
 {
@@ -38,7 +38,7 @@ void console_init()
 
 bool console_tick(void* unused)
 {
-    for (uint8_t i = 0; i < Serial.available(); i++)
+    while (Serial.available())
     {
         char byte = Serial.read();
 
@@ -83,7 +83,7 @@ bool console_tick(void* unused)
     return true;
 }
 
-void _handleCommand(char* command)
+static void _handleCommand(char* command)
 {
     // Remove leading whitespace
     while (isspace(*command)) ++command;

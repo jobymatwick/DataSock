@@ -40,6 +40,13 @@ char* clock_getLocalNowString();
 bool clock_isSet();
 
 /*
+ * Name:    clock_set
+ *  utc_time: Unix epoch to set the RTC to
+ * Desc:    Set the integrated RTC with an epoch
+ */
+void clock_set(uint32_t utc_time);
+
+/*
  * Name:    clock_fsStampCallback
  *  date:   pointer to date variable to populate
  *  time:   pointer to time variable to populate
