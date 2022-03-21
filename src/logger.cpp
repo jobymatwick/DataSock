@@ -77,7 +77,7 @@ void logger_serviceBuffer()
 
     // Add timestamp and MPU data to string
     uint16_t len = snprintf(row_buf, CSV_ROW_BUF_LEN,
-    "%10lu.%03d,%d,%d,%d,%d,%d,%d,%d", _tail->time, _tail->millis,
+    "%lu.%03d,%d,%d,%d,%d,%d,%d,%d", _tail->time, _tail->millis,
     _tail->mpu_accel[0], _tail->mpu_accel[1], _tail->mpu_accel[2],
     _tail->mpu_gyro[0], _tail->mpu_gyro[1], _tail->mpu_gyro[2],
     _tail->mpu_temp);

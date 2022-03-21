@@ -33,7 +33,7 @@ const char* config_defaults[] =
 {
     "DataSock",
     "100",
-    "-8",
+    "-7",
     "0",
     "0",
     "9"
@@ -100,13 +100,21 @@ bool storage_start()
 
 bool storage_format()
 {
+    bool logger = logger_getState();
+    if (logger) logger_stopSampling();
+
     if (_sd_open)
     {
         _sd.end();
         _sd_open = false;
     }
 
-    storage_start();
+    if (!storage_start())
+    {
+        Serial.println("Failed to start SD card");
+        _sdError();
+        return false;
+    }
 
     if (!_sd.card() || _sd.card()->errorCode())
     {
@@ -123,7 +131,9 @@ bool storage_format()
         return false;
     }
 
+    uint8_t buf[512];
     Serial.printf("Found %.2f GB SD card\r\n", (sectors * 512E-8) / 10.0);
+    /*
     Serial.print("Starting erase...     ");
 
     // Erase all SD sectors
@@ -150,7 +160,6 @@ bool storage_format()
     Serial.print(" complete.\r\n");
 
     // Verify erase
-    uint8_t buf[512];
     if (!_sd.card()->readSector(0, buf))
     {
         Serial.println("Failed to read first block");
@@ -158,6 +167,7 @@ bool storage_format()
         return false;
     }
     Serial.printf("All blocks erased to 0x%02x\r\n", buf[0]);
+    */
 
     // Format as exFAT
     ExFatFormatter exFatFormatter;
@@ -173,6 +183,8 @@ bool storage_format()
 
     if (storage_start() || storage_start() || storage_start() || storage_start())
         return storage_configCreate();
+
+    if (logger) logger_startSampling();
 
     return false;
 }
@@ -409,6 +421,50 @@ uint32_t* storage_getLogFiles(uint16_t* count, uint32_t start, uint32_t end)
     return data;
 }
 
+bool storage_getNextSample(uint32_t time, log_entry_t* log)
+{
+    static uint32_t last_time = 0;
+    static FsFile file;
+
+    time -= 25200;
+
+    if (time != last_time || !file.isOpen())
+    {
+        char filename[50];
+        snprintf(filename, 50, "%s_%04d-%02d-%02d_%02d.csv",
+                storage_configGetString(CONFIG_DEV_NAME),
+                year(time), month(time), day(time), hour(time));
+        
+        if (!file.open(filename, O_RDONLY))
+            Serial.printf("Failed to open %s\r\n", filename);
+    }
+
+    last_time = time;
+
+    if (!file.isOpen())
+    {
+        Serial.println("file not open");
+        return false;
+    }
+
+    char line[200];
+    file.setTimeout(10);
+    file.readBytesUntil('\n', line, 200);
+
+    uint8_t count = sscanf(line, "%lu.%hu,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd",
+        &(log->time), &(log->millis), &(log->mpu_accel[0]), &(log->mpu_accel[1]), &(log->mpu_accel[2]),
+        &(log->mpu_gyro[0]), &(log->mpu_gyro[1]), &(log->mpu_gyro[2]), &(log->mpu_temp),
+        &(log->adc_data[0]), &(log->adc_data[1]), &(log->adc_data[2]), &(log->adc_data[3]),
+        &(log->adc_data[4]), &(log->adc_data[5]), &(log->adc_data[6]), &(log->adc_data[7]),
+        &(log->adc_data[8]), &(log->adc_data[9]), &(log->adc_data[10]), &(log->adc_data[11]),
+        &(log->adc_data[12]), &(log->adc_data[13]), &(log->adc_data[14]), &(log->adc_data[15]));
+
+    if (count < 9)
+        return false;
+
+    return true;
+}
+
 bool storage_console(uint8_t argc, char* argv[])
 {
     if (!strcmp("init", argv[1]))
@@ -507,7 +563,7 @@ bool storage_console(uint8_t argc, char* argv[])
         return true;
     }
 
-    if (!strcmp("getlog", argv[1]))
+    if (!strcmp("query", argv[1]))
     {
         uint32_t start = 0, end = 0;
         if (argc == 4)
@@ -528,6 +584,25 @@ bool storage_console(uint8_t argc, char* argv[])
 
         Serial.println();
         free(data);
+
+        return true;
+    }
+
+    if (!strcmp("get", argv[1]))
+    {
+        if (argc != 3)
+            return false;
+
+        uint32_t time = atoi(argv[2]);
+
+        log_entry_t e;
+        memset(&e, 0, sizeof(log_entry_t));
+
+        storage_getNextSample(time, &e);
+    
+        for (uint8_t i = 0; i < sizeof(log_entry_t); i++)
+            Serial.printf("0x%02X%s", ((char*) (&e))[i],
+                (i == sizeof(log_entry_t) - 1) ? "\r\n" : ", ");
 
         return true;
     }
