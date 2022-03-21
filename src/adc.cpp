@@ -33,6 +33,16 @@ void adc_sample(uint16_t* channels, uint8_t count)
 {
     for (uint8_t i = 0; i < count; i++)
         channels[i] = analogRead(_analog_to_pin[channels[i]]);
+
+    if (_print_samples)
+    {
+        Serial.printf("[%" PRIu16, channels[0]);
+        for (uint8_t i = 1; i < count; i++)
+            Serial.printf(", %" PRIu16, channels[i]);
+        Serial.println("]");
+
+        _print_samples -= _print_samples > 0 ? 1 : 0;
+    }
 }
 
 bool adc_readTask(void* unused)

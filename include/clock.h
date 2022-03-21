@@ -62,6 +62,13 @@ void clock_fsStampCallback(uint16_t* date, uint16_t* time);
 uint16_t clock_millis();
 
 /*
+ * Name:    clock_localHumanToUtc
+ *  return: UTC time in seconds
+ * Desc:    Convert human readable local time into UTC seconds
+ */
+time_t clock_localHumanToUtc(uint8_t hr, uint8_t min, uint8_t sec, uint8_t day, uint8_t month, uint16_t yr);
+
+/*
  * Name:    clock_console
  *  argc:   number of arguments
  *  argv:   list of arguments

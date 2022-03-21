@@ -43,6 +43,7 @@ static bool _proto_ack(uint8_t argc, char* argv[]);
 static bool _proto_mpu(uint8_t argc, char* argv[]);
 static bool _proto_rtc(uint8_t argc, char* argv[]);
 static bool _proto_live(uint8_t argc, char* argv[]);
+static bool _proto_query(uint8_t argc, char* argv[]);
 
 const console_command_t _bt_proto[] =
 {
@@ -50,7 +51,8 @@ const console_command_t _bt_proto[] =
     { "mpu", _proto_mpu },
     { "rtc", _proto_rtc },
     { "lon", _proto_live },
-    { "loff", _proto_live }
+    { "loff", _proto_live },
+    { "qry", _proto_query }
 };
 
 char _recv_buf[RECV_BUF];
@@ -180,13 +182,20 @@ void _handleCommand(char* command)
         cursor++;
     }
 
+    bool found = false;
     for (uint8_t i = 0; i < (sizeof(_bt_proto) / sizeof(console_command_t)); i++)
     {
         if (!strcmp(argv[0], _bt_proto[i].command))
         {
             _bt_proto[i].handler(argc, argv);
+            found = true;
             break;
         }
+    }
+
+    if (!found)
+    {
+        Serial.printf("Recieved unknown BT command: %s\r\n", argv[0]);
     }
 }
 
@@ -234,6 +243,30 @@ static bool _proto_live(uint8_t argc, char* argv[])
         HM_10_SERIAL.print("ok\r\n");
         break;
     }
+
+    return true;
+}
+
+static bool _proto_query(uint8_t argc, char* argv[])
+{
+    uint32_t* data;
+    uint16_t len = 0;
+    uint32_t start = 0, end = 0;
+
+    if (argc == 3)
+    {
+        start = atoi(argv[1]);
+        end = atoi(argv[2]);
+    }
+
+    data = storage_getLogFiles(&len, start, end);
+
+    Serial1.printf("ok,%d", len);
+    for (int i = 0; i < len; i++)
+        Serial1.printf(",%d", data[i]);
+    Serial1.printf("\r\n");
+
+    free(data);
 
     return true;
 }

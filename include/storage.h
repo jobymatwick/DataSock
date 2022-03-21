@@ -92,6 +92,16 @@ char* storage_configGetString(config_keys_t option);
 bool storage_addToLogFile(char* text, uint16_t len);
 
 /*
+ * Name:    storage_getLogFiles
+ *  count:  pointer to variable to store number of logs found
+ *  start:  get entries newer than this time
+ *  end:    get entiries older than this
+ * Desc:    Get a list of log entires within the provided range. If start or end
+ *            is 0, return all entires. Array must be freed manually.
+ */
+uint32_t* storage_getLogFiles(uint16_t* count, uint32_t start, uint32_t end);
+
+/*
  * Name:    storage_console
  *  argc:   number of arguments
  *  argv:   list of arguments

@@ -28,13 +28,6 @@
 time_t _getUtcTime();
 
 /*
- * Name:    _localHumanToUtc
- *  return: UTC time in seconds
- * Desc:    Convert human readable local time into UTC seconds
- */
-time_t _localHumanToUtc(uint8_t hr, uint8_t min, uint8_t sec, uint8_t day, uint8_t month, uint16_t yr);
-
-/*
  * Name:    _localToUtc
  *  local_time: local time in seconds
  *  return: UTC time in seconds
@@ -125,6 +118,20 @@ uint16_t clock_millis()
     return ((seconds * 1000) + (micros / 1000)) % 1000; // ms into second
 }
 
+time_t clock_localHumanToUtc(uint8_t hr, uint8_t min, uint8_t sec, uint8_t day, uint8_t month, uint16_t yr)
+{
+    tm time = { 0 };
+
+    time.tm_hour = hr;
+    time.tm_min = min;
+    time.tm_sec = sec;
+    time.tm_mday = day;
+    time.tm_mon = month - 1;
+    time.tm_year = yr - 1900;
+
+    return _localToUtc(mktime(&time));
+}
+
 bool clock_console(uint8_t argc, char* argv[])
 {
     if (!strcmp("get", argv[1]))
@@ -142,12 +149,12 @@ bool clock_console(uint8_t argc, char* argv[])
         {
           // clock set HH MM SS - Just change time
           case 5:
-            time = _localHumanToUtc(atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), day(time), month(time), year(time));
+            time = clock_localHumanToUtc(atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), day(time), month(time), year(time));
             break;
 
           // clock set HH MM SS DD MM YYYY - Change date and time
           case 8:
-            time = _localHumanToUtc(atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]));
+            time = clock_localHumanToUtc(atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]));
             break;
         
           default:
@@ -178,19 +185,6 @@ time_t _getUtcTime()
     return Teensy3Clock.get();
 }
 
-time_t _localHumanToUtc(uint8_t hr, uint8_t min, uint8_t sec, uint8_t day, uint8_t month, uint16_t yr)
-{
-    tm time = { 0 };
-
-    time.tm_hour = hr;
-    time.tm_min = min;
-    time.tm_sec = sec;
-    time.tm_mday = day;
-    time.tm_mon = month - 1;
-    time.tm_year = yr - 1900;
-
-    return _localToUtc(mktime(&time));
-}
 
 time_t _localToUtc(time_t local_time)
 {

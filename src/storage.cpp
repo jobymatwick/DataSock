@@ -50,7 +50,19 @@ config_val_t config_values[CONFIG_COUNT];
 bool _sd_open = false;
 SdFs _sd;
 
-void _sdError();
+/*
+ * Name:    _sdError
+ * Desc:    Print the SD card error message and clean up the connection on error.
+ */
+static void _sdError();
+
+/*
+ * Name:    _str2int
+ *  str:    string to convert from
+ *  len:    number of characters to read
+ * Desc:    Convert n characters into positive integer.
+ */
+static uint16_t _str2int(const char* str, uint16_t len);
 
 bool storage_init()
 {
@@ -342,6 +354,61 @@ bool storage_addToLogFile(char* text, uint16_t len)
     return true;
 }
 
+uint32_t* storage_getLogFiles(uint16_t* count, uint32_t start, uint32_t end)
+{
+    *count = 0;
+    uint16_t arr_size = 4;
+    uint32_t* data;
+    FsFile dir, file;
+    uint8_t name_len = strlen(storage_configGetString(CONFIG_DEV_NAME));
+
+    dir.open("/");
+    if (!dir.isDir())
+        return nullptr;
+
+    data = (uint32_t*) malloc(arr_size * sizeof(uint32_t));
+    dir.rewindDirectory();
+
+    file = dir.openNextFile(O_RDONLY);
+    while (file)
+    {
+        char name[128];
+        file.getName(name, 128);
+
+        if (!strncmp(storage_configGetString(CONFIG_DEV_NAME), name, name_len))
+        {
+            uint8_t hr, day, month;
+            uint16_t yr;
+            char* curs = name + name_len + 1;
+
+            yr = _str2int(curs, 4);
+            curs += 5;
+            month = _str2int(curs, 2);
+            curs += 3;
+            day = _str2int(curs, 2);
+            curs += 3;
+            hr = _str2int(curs, 2);
+
+            uint32_t time = clock_localHumanToUtc(hr, 0, 0, day, month, yr);
+
+            if (!start || !end || (time >= start && time <= end))
+            {
+                (*count)++;
+                if (*count > arr_size)
+                {
+                    arr_size *= 2;
+                    data = (uint32_t*) realloc(data, arr_size);
+                }
+                data[*count - 1] = time;
+            }
+        }
+
+        file = dir.openNextFile(O_RDONLY);
+    }
+
+    return data;
+}
+
 bool storage_console(uint8_t argc, char* argv[])
 {
     if (!strcmp("init", argv[1]))
@@ -440,16 +507,35 @@ bool storage_console(uint8_t argc, char* argv[])
         return true;
     }
 
-    if (!strcmp("p", argv[1]))
+    if (!strcmp("getlog", argv[1]))
     {
-        logger_serviceBuffer();
+        uint32_t start = 0, end = 0;
+        if (argc == 4)
+        {
+            start = atoi(argv[2]);
+            end = atoi(argv[3]);
+        }
+        else
+            Serial.print("No date range specified - ");
+
+        uint16_t len = 0;
+        uint32_t* data = storage_getLogFiles(&len, start, end);
+        
+        Serial.printf("Found %d log files\r\n", len);
+
+        for (int i = 0; i < len; i++)
+            Serial.printf("%s%d", (i == 0) ? "" : ", ", data[i]);
+
+        Serial.println();
+        free(data);
+
         return true;
     }
 
     return false;
 }
 
-void _sdError()
+static void _sdError()
 {
     _sd_open = false;
 
@@ -464,4 +550,13 @@ void _sdError()
 
     Serial.printf("SD error code: 0x%02X, data: 0x%02X\r\n",
                   _sd.card()->errorCode(), _sd.card()->errorData());
+}
+
+static uint16_t _str2int(const char* str, uint16_t len)
+{
+    int val = 0;
+    for(int i = 0; i < len; ++i)
+        val = val * 10 + (str[i] - '0');
+
+    return val;
 }
