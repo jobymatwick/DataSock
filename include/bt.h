@@ -27,7 +27,6 @@ bool bt_active();
 
 /*
  * Name:    bt_tick
- *  return: always true
  * Desc:    collect received characters and dispatch commands
  */
 bool bt_tick();

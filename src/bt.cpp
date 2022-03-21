@@ -13,7 +13,7 @@
 #include "clock.h"
 
 #define HM_10_SERIAL    Serial1
-#define HM_10_BAUDRATE  230400
+#define HM_10_BAUDRATE  115200
 #define RECV_BUF        128
 #define ASCII_BOT       0x20
 #define ASCII_TOP       0x7E
@@ -44,6 +44,7 @@ static bool _proto_mpu(uint8_t argc, char* argv[]);
 static bool _proto_rtc(uint8_t argc, char* argv[]);
 static bool _proto_live(uint8_t argc, char* argv[]);
 static bool _proto_query(uint8_t argc, char* argv[]);
+static bool _proto_get(uint8_t argc, char* argv[]);
 
 const console_command_t _bt_proto[] =
 {
@@ -52,7 +53,8 @@ const console_command_t _bt_proto[] =
     { "rtc", _proto_rtc },
     { "lon", _proto_live },
     { "loff", _proto_live },
-    { "qry", _proto_query }
+    { "qry", _proto_query },
+    { "get", _proto_get }
 };
 
 char _recv_buf[RECV_BUF];
@@ -267,6 +269,44 @@ static bool _proto_query(uint8_t argc, char* argv[])
     Serial1.printf("\r\n");
 
     free(data);
+
+    return true;
+}
+
+static bool _proto_get(uint8_t argc, char* argv[])
+{
+    Serial.printf("argc: %d\r\n", argc);
+    if (argc < 2)
+        return false;
+
+    _state = BT_XFER;
+    _last_ack = millis();
+
+    uint32_t time = atoi(argv[1]);
+    log_entry_t log;
+
+    FLUSH_RECV;
+
+    while (storage_getNextSample(time, &log))
+    {
+        
+        if (HM_10_SERIAL.read() == 'a')
+        {
+            Serial.print("a");
+            _last_ack = millis();
+        }
+
+        if (millis() - _last_ack > ACK_PERIOD)
+        {
+            Serial.println("Acked out");
+            return false;
+        }
+
+        bt_sendSample(&log);
+        delay(7); // Need to wait a bit or HM-10 will lock of and reboot
+    }
+    
+    _state = BT_IDLE;
 
     return true;
 }

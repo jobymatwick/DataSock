@@ -443,12 +443,12 @@ bool storage_getNextSample(uint32_t time, log_entry_t* log)
 
     if (!file.isOpen())
     {
-        Serial.println("file not open");
+        Serial.print("File not open");
         return false;
     }
 
     char line[200];
-    file.setTimeout(10);
+    file.setTimeout(100);
     file.readBytesUntil('\n', line, 200);
 
     uint8_t count = sscanf(line, "%lu.%hu,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd,%hd",
@@ -460,7 +460,10 @@ bool storage_getNextSample(uint32_t time, log_entry_t* log)
         &(log->adc_data[12]), &(log->adc_data[13]), &(log->adc_data[14]), &(log->adc_data[15]));
 
     if (count < 9)
+    {
+        Serial.printf("Failed to parse line\r\n");
         return false;
+    }
 
     return true;
 }
