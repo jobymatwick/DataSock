@@ -8,6 +8,7 @@
 #include <Arduino.h>
 
 #include "adc.h"
+#include "bt.h"
 #include "console.h"
 #include "mpu.h"
 #include "clock.h"
@@ -16,9 +17,11 @@
 
 #define LED_PERIOD 100
 #define CONSOLE_PERIOD 50
+#define BT_PERIOD 50
 
 uint32_t next_led = LED_PERIOD;
 uint32_t next_console = CONSOLE_PERIOD;
+uint32_t next_bt = BT_PERIOD;
 
 void setup()
 {
@@ -29,6 +32,7 @@ void setup()
     
     console_init();
     adc_init();
+    bt_init();
     mpu_init();
     clock_init();
 
@@ -47,6 +51,12 @@ void loop()
     {
         next_console += CONSOLE_PERIOD;
         console_tick(NULL);
+    }
+
+    if (millis() >= next_bt)
+    {
+        next_bt += BT_PERIOD;
+        bt_tick();
     }
 
     logger_serviceBuffer();

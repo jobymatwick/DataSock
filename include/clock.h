@@ -40,6 +40,13 @@ char* clock_getLocalNowString();
 bool clock_isSet();
 
 /*
+ * Name:    clock_set
+ *  utc_time: Unix epoch to set the RTC to
+ * Desc:    Set the integrated RTC with an epoch
+ */
+void clock_set(uint32_t utc_time);
+
+/*
  * Name:    clock_fsStampCallback
  *  date:   pointer to date variable to populate
  *  time:   pointer to time variable to populate
@@ -53,6 +60,13 @@ void clock_fsStampCallback(uint16_t* date, uint16_t* time);
  * Desc:    Get the current number of milliseconds into the current second.
  */
 uint16_t clock_millis();
+
+/*
+ * Name:    clock_localHumanToUtc
+ *  return: UTC time in seconds
+ * Desc:    Convert human readable local time into UTC seconds
+ */
+time_t clock_localHumanToUtc(uint8_t hr, uint8_t min, uint8_t sec, uint8_t day, uint8_t month, uint16_t yr);
 
 /*
  * Name:    clock_console

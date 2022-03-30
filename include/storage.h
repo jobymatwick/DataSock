@@ -10,6 +10,8 @@
 
 #include <Arduino.h>
 
+#include "logger.h"
+
 #define CONFIG_STRING_LEN 32
 
 typedef enum
@@ -90,6 +92,25 @@ char* storage_configGetString(config_keys_t option);
  *            needed and automatically swapped to a new file every hour.
  */
 bool storage_addToLogFile(char* text, uint16_t len);
+
+/*
+ * Name:    storage_getLogFiles
+ *  count:  pointer to variable to store number of logs found
+ *  start:  get entries newer than this time
+ *  end:    get entiries older than this
+ * Desc:    Get a list of log entires within the provided range. If start or end
+ *            is 0, return all entires. Array must be freed manually.
+ */
+uint32_t* storage_getLogFiles(uint16_t* count, uint32_t start, uint32_t end);
+
+/*
+ * Name:    storage_getNextSample
+ *  time:   epoch of hour file to get next sample from
+ *  log:    log entry struct to populate
+ *  return: true if a entry was aquired, else false (error, EOF, etc)
+ * Desc:    Get the next entry for a given log file.
+ */
+bool storage_getNextSample(uint32_t time, log_entry_t* log);
 
 /*
  * Name:    storage_console
