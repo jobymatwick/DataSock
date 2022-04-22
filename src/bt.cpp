@@ -239,10 +239,11 @@ static bool _proto_live(uint8_t argc, char* argv[])
       case 'n':
         _last_ack = millis();
         _state = BT_LIVE;
+        Serial.println("lon");
         break;
       case 'f':
         _state = BT_IDLE;
-        HM_10_SERIAL.print("ok\r\n");
+        //HM_10_SERIAL.print("ok\r\n");
         break;
     }
 

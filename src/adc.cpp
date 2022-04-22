@@ -12,6 +12,8 @@
 
 #define ADC_RES_BITS 13
 
+const uint8_t chan_order[] = { 9, 8, 7, 6, 3, 2, 1, 0, 19, 18, 17, 16, 15, 14, 20, 21};
+
 // For mapping analog input labels (i.e A0, A1) to pin numbers for analogRead()
 const uint8_t _analog_to_pin[] = { 
     PIN_A0,  PIN_A1,  PIN_A2,  PIN_A3,  PIN_A4,  PIN_A5,  PIN_A6,
@@ -20,7 +22,6 @@ const uint8_t _analog_to_pin[] = {
     PIN_A21, PIN_A22, PIN_A23, PIN_A24, PIN_A25, PIN_A26
 };
 
-uint16_t _sample_channels[16] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 uint8_t _channel_count = 1;
 uint16_t _print_samples = 0;
 
@@ -32,7 +33,7 @@ void adc_init(void)
 void adc_sample(uint16_t* channels, uint8_t count)
 {
     for (uint8_t i = 0; i < count; i++)
-        channels[i] = analogRead(_analog_to_pin[channels[i]]);
+        channels[i] = analogRead(_analog_to_pin[chan_order[i]]);
 
     if (_print_samples)
     {
@@ -43,26 +44,6 @@ void adc_sample(uint16_t* channels, uint8_t count)
 
         _print_samples -= _print_samples > 0 ? 1 : 0;
     }
-}
-
-bool adc_readTask(void* unused)
-{
-    uint16_t channels[_channel_count];
-    memcpy(channels, _sample_channels, _channel_count * sizeof(uint16_t));
-
-    adc_sample(channels, _channel_count);
-
-    if (_print_samples)
-    {
-        Serial.printf("[%" PRIu16, channels[0]);
-        for (uint8_t i = 1; i < _channel_count; i++)
-            Serial.printf(", %" PRIu16, channels[i]);
-        Serial.println("]");
-
-        _print_samples -= _print_samples > 0 ? 1 : 0;
-    }
-
-    return true;
 }
 
 bool adc_console(uint8_t argc, char* argv[])

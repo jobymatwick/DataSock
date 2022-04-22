@@ -36,7 +36,7 @@ const char* config_defaults[] =
     "-7",
     "0",
     "0",
-    "9"
+    "12"
 };
 
 typedef struct config_val_t
